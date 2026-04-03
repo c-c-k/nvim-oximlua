@@ -77,8 +77,17 @@ pub fn del_user_command(name: &str) -> Result<()> {
 /// Returns an iterator over the infos of the global ex commands. Only
 /// user-defined commands are returned, not builtin ones.
 ///
+/// # Safety
+///
+/// The underlying C API function creates a Lua registry slot for each
+/// command and completion callback, which it expects the caller to clean up.
+/// Currently `nvim-oxi` does not perform this cleanup, consequentially
+/// calling this function creates a serious leak of Lua registry slots which
+/// in turn also prevents the callbacks from being garbage collected if their
+/// commands are deleted.
+///
 /// [1]: https://neovim.io/doc/user/api.html#nvim_get_commands()
-pub fn get_commands(
+pub unsafe fn get_commands(
     opts: &GetCommandsOpts,
 ) -> Result<impl SuperIterator<CommandInfos> + use<>> {
     let mut err = nvim::Error::new();

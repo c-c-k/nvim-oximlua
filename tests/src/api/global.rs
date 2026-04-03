@@ -17,8 +17,9 @@ fn create_del_user_command() {
     assert_eq!(Ok(()), res);
     api::command("Bar").unwrap();
 
-    let commands =
-        api::get_commands(&Default::default()).unwrap().collect::<Vec<_>>();
+    let commands = unsafe { api::get_commands(&Default::default()) }
+        .unwrap()
+        .collect::<Vec<_>>();
 
     assert!(commands.iter().any(|cmd| cmd.name == "Foo"));
     assert!(commands.iter().any(|cmd| cmd.name == "Bar"));
@@ -289,7 +290,7 @@ fn user_command_with_count() {
     let opts = CreateCommandOpts::builder().count(32).build();
     api::create_user_command("Foo", "echo 'foo'", &opts).unwrap();
 
-    let res = api::get_commands(&Default::default())
+    let res = unsafe { api::get_commands(&Default::default()) }
         .map(|cmds| cmds.collect::<Vec<_>>());
 
     assert!(res.is_ok(), "{res:?}");

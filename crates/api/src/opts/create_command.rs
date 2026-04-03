@@ -4,7 +4,7 @@ use crate::Buffer;
 use crate::types::{
     CommandAddr,
     CommandArgs,
-    CommandComplete,
+    CommandCompleteOrFunction,
     CommandNArgs,
     CommandRange,
 };
@@ -27,8 +27,9 @@ pub struct CreateCommandOpts {
     bar: types::Boolean,
 
     #[builder(
-        argtype = "CommandComplete",
-        inline = "{0}.to_object().unwrap()"
+        generics = "C: CommandCompleteOrFunction",
+        argtype = "C",
+        inline = "{0}.to_object()"
     )]
     complete: types::Object,
 
