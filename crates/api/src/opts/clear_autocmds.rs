@@ -10,8 +10,18 @@ pub struct ClearAutocmdsOpts {
 
     /// Only clear the autocommands local to a specific `Buffer`. Cannot be
     /// used together with [`patterns`](ClearAutocmdsOptsBuilder::patterns).
+    #[cfg_attr( // On 0.12 and Nightly.
+        feature = "neovim-0-12",
+        deprecated = "NVIM v0.12.2 soft deprecates `buffer` for `ClearAutocmdsOpts`, use `buf` instead",
+    )]
     #[builder(argtype = "Buffer", inline = "{0}.0")]
     buffer: types::BufHandle,
+
+    /// Only clear the autocommands local to a specific `Buffer`. Cannot be
+    /// used together with [`patterns`](ClearAutocmdsOptsBuilder::patterns).
+    #[cfg(feature = "neovim-0-12")] // On 0.12 and Nightly.
+    #[builder(argtype = "Buffer", inline = "{0}.0")]
+    buf: types::BufHandle,
 
     /// Clear all the autocommands triggered by one or more of the specified
     /// events.

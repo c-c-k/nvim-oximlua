@@ -10,8 +10,18 @@ pub struct ExecAutocmdsOpts {
 
     /// A specific [`Buffer`] for buffer-local autocommands. Cannot be used
     /// together with [`patterns`](ExecAutocmdsOptsBuilder::patterns).
+    #[cfg_attr( // On 0.12 and Nightly.
+        feature = "neovim-0-12",
+        deprecated = "NVIM v0.12.2 soft deprecates `buffer` for `ExecAutocmdsOpts`, use `buf` instead",
+    )]
     #[builder(argtype = "Buffer", inline = "{0}.0")]
     buffer: types::BufHandle,
+
+    /// A specific [`Buffer`] for buffer-local autocommands. Cannot be used
+    /// together with [`patterns`](ExecAutocmdsOptsBuilder::patterns).
+    #[cfg(feature = "neovim-0-12")] // On 0.12 and Nightly.
+    #[builder(argtype = "Buffer", inline = "{0}.0")]
+    buf: types::BufHandle,
 
     /// The autocommand group name or id to match against.
     #[builder(
