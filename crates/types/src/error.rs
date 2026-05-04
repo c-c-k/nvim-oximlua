@@ -2,6 +2,9 @@ use std::error::Error as StdError;
 use std::ffi::{CStr, CString, c_char};
 use std::fmt;
 
+#[cfg(feature = "oximlua")]
+use mlua::ExternalError;
+
 // https://github.com/neovim/neovim/blob/v0.9.0/src/nvim/api/private/defs.h#L64-L67
 //
 /// Binding to the error type used by Neovim.
@@ -66,6 +69,13 @@ impl fmt::Debug for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Debug::fmt(self, f)
+    }
+}
+
+#[cfg(feature = "oximlua")]
+impl From<Error> for mlua::Error {
+    fn from(value: Error) -> Self {
+        value.into_lua_err()
     }
 }
 

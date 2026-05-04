@@ -1,9 +1,14 @@
 use std::borrow::Cow;
+#[cfg(not(feature = "oximlua"))]
 use std::ffi::c_int;
 use std::mem::ManuallyDrop;
 
+#[cfg(not(feature = "oximlua"))]
 use lua::{Poppable, Pushable, ffi::*};
+#[cfg(not(feature = "oximlua"))]
 use luajit as lua;
+#[cfg(feature = "oximlua")]
+use oximlua as olua;
 
 use crate::{
     Array,
@@ -495,7 +500,12 @@ impl Clone for Object {
             ObjectKind::Dictionary => {
                 clone_drop!(self, dictionary, Dictionary)
             },
-            ObjectKind::LuaRef => clone_copy!(self, luaref),
+            ObjectKind::LuaRef => {
+                //unsafe {
+                // #[cfg(feature = "oximlua")]
+                // Function::add_cache_ref_count(self.data.luaref);
+                clone_copy!(self, luaref)
+            },
         }
     }
 }
@@ -515,6 +525,10 @@ impl Drop for Object {
                 ManuallyDrop::drop(&mut self.data.dictionary)
             },
 
+            // #[cfg(feature = "oximlua")]
+            // ObjectKind::LuaRef => unsafe {
+            //     Function::remove_cache_ref_count(self.data.luaref)
+            // },
             _ => {},
         }
     }
@@ -590,6 +604,10 @@ from_man_drop!(Dictionary, Dictionary, dictionary);
 
 impl<A, R> From<Function<A, R>> for Object {
     fn from(fun: Function<A, R>) -> Self {
+        // #[cfg(feature = "oximlua")]
+        // unsafe {
+        //     Function::add_cache_ref_count(fun.lua_ref);
+        // }
         Self::from_luaref(fun.lua_ref)
     }
 }
@@ -699,6 +717,7 @@ where
     }
 }
 
+#[cfg(not(feature = "oximlua"))]
 impl Pushable for Object {
     unsafe fn push(self, lstate: *mut State) -> Result<c_int, lua::Error> {
         match self.kind() {
@@ -722,6 +741,40 @@ impl Pushable for Object {
     }
 }
 
+#[cfg(feature = "oximlua")]
+impl mlua::IntoLua for Object {
+    fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        use mlua::Value;
+        unsafe {
+            match self.kind() {
+                ObjectKind::Nil => Ok(Value::Nil),
+                ObjectKind::Boolean => {
+                    self.as_boolean_unchecked().into_lua(lua)
+                },
+                ObjectKind::Integer
+                | ObjectKind::Buffer
+                | ObjectKind::Window
+                | ObjectKind::TabPage => {
+                    self.as_integer_unchecked().into_lua(lua)
+                },
+                ObjectKind::Float => self.as_float_unchecked().into_lua(lua),
+                ObjectKind::String => {
+                    self.into_string_unchecked().into_lua(lua)
+                },
+                ObjectKind::Array => self.into_array_unchecked().into_lua(lua),
+                ObjectKind::Dictionary => {
+                    self.into_dictionary_unchecked().into_lua(lua)
+                },
+                ObjectKind::LuaRef => {
+                    Function::<(), ()>::from_ref(self.as_luaref_unchecked())
+                        .into_lua(lua)
+                },
+            }
+        }
+    }
+}
+
+#[cfg(not(feature = "oximlua"))]
 impl Poppable for Object {
     unsafe fn pop(lstate: *mut State) -> Result<Self, lua::Error> {
         if lua_gettop(lstate) == 0 {
@@ -770,6 +823,40 @@ impl Poppable for Object {
             },
 
             _ => unreachable!(),
+        }
+    }
+}
+
+#[cfg(feature = "oximlua")]
+impl mlua::FromLua for Object {
+    fn from_lua(value: mlua::Value, _lua: &mlua::Lua) -> mlua::Result<Self> {
+        match value {
+            mlua::Value::Nil => Ok(Self::nil()),
+            mlua::Value::Boolean(boolean) => Ok(boolean.into()),
+            mlua::Value::Integer(integer) => Ok(integer.into()),
+            mlua::Value::Number(float) => Ok(float.into()),
+            mlua::Value::String(string) => Ok(NvimString::from(string).into()),
+            mlua::Value::Table(table) => unsafe {
+                if olua::utils::is_table_array(&table) {
+                    Ok(Array::try_from_table_unchecked(table)?.into())
+                } else {
+                    Ok(Dictionary::try_from_table_unchecked(table)?.into())
+                }
+            },
+            mlua::Value::Function(fun) => {
+                Ok(Function::<(), ()>::from(fun).into())
+            },
+            mlua::Value::Error(_)
+            | mlua::Value::LightUserData(_)
+            | mlua::Value::Other(_)
+            | mlua::Value::Thread(_)
+            | mlua::Value::UserData(_) => {
+                Err(mlua::Error::FromLuaConversionError {
+                    from: std::any::type_name_of_val(&value),
+                    to: std::any::type_name::<Self>().to_string(),
+                    message: Some(format!("unexpected value {value:#?}")),
+                })
+            },
         }
     }
 }

@@ -6,6 +6,7 @@ use core::str::{self, Utf8Error};
 use core::{ffi, fmt};
 use std::path::{Path, PathBuf};
 
+#[cfg(not(feature = "oximlua"))]
 use luajit as lua;
 
 use crate::{NvimStr, Object, ObjectKind, StringBuilder, conversion};
@@ -255,6 +256,7 @@ impl TryFrom<Object> for String {
     }
 }
 
+#[cfg(not(feature = "oximlua"))]
 impl lua::Pushable for String {
     #[inline]
     unsafe fn push(
@@ -266,6 +268,29 @@ impl lua::Pushable for String {
     }
 }
 
+#[cfg(feature = "oximlua")]
+impl From<mlua::String> for String {
+    fn from(value: mlua::String) -> Self {
+        String::from_bytes(&value.as_bytes())
+    }
+}
+
+#[cfg(feature = "oximlua")]
+impl mlua::FromLua for String {
+    #[inline]
+    fn from_lua(value: mlua::Value, _lua: &mlua::Lua) -> mlua::Result<Self> {
+        let mlua::Value::String(string) = value else {
+            return Err(mlua::Error::FromLuaConversionError {
+                from: std::any::type_name_of_val(&value),
+                to: std::any::type_name::<Self>().to_string(),
+                message: Some(format!("unexpected value {value:#?}")),
+            });
+        };
+        Ok(Self::from(string))
+    }
+}
+
+#[cfg(not(feature = "oximlua"))]
 impl lua::Poppable for String {
     #[inline]
     unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
@@ -294,6 +319,14 @@ impl lua::Poppable for String {
         lua_pop(lstate, 1);
 
         Ok(s)
+    }
+}
+
+#[cfg(feature = "oximlua")]
+impl mlua::IntoLua for String {
+    #[inline]
+    fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        mlua::String::wrap(self.as_bytes()).into_lua(lua)
     }
 }
 

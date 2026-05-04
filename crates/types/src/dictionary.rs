@@ -1,4 +1,9 @@
+#[cfg(not(feature = "oximlua"))]
 use luajit as lua;
+#[cfg(feature = "oximlua")]
+use mlua::ExternalResult;
+#[cfg(feature = "oximlua")]
+use oximlua as olua;
 
 use crate::kvec::{self, KVec};
 use crate::{NonOwning, Object, ObjectKind, conversion};
@@ -151,6 +156,26 @@ impl Dictionary {
     #[inline]
     pub fn swap_remove(&mut self, index: usize) -> KeyValuePair {
         self.0.swap_remove(index)
+    }
+
+    #[cfg(feature = "oximlua")]
+    pub(crate) unsafe fn try_from_table_unchecked(
+        table: mlua::Table,
+    ) -> mlua::Result<Self> {
+        use mlua::{ExternalResult, FromLua};
+
+        let lua = olua::get_nvim_lua().into_lua_err()?;
+        let mut kvec =
+            KVec::with_capacity(table.len()?.try_into().into_lua_err()?);
+
+        for pair in table.pairs::<mlua::Value, mlua::Value>() {
+            let (key, value) = pair?;
+            let key = crate::String::from_lua(key, &lua)?;
+            let value = Object::from_lua(value, &lua)?;
+            kvec.push(KeyValuePair { key, value });
+        }
+
+        Ok(Self(kvec))
     }
 }
 
@@ -386,6 +411,7 @@ impl TryFrom<Object> for Dictionary {
     }
 }
 
+#[cfg(not(feature = "oximlua"))]
 impl lua::Poppable for Dictionary {
     #[inline]
     unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
@@ -421,6 +447,42 @@ impl lua::Poppable for Dictionary {
     }
 }
 
+#[cfg(feature = "oximlua")]
+impl TryFrom<mlua::Table> for Dictionary {
+    type Error = mlua::Error;
+
+    fn try_from(value: mlua::Table) -> Result<Self, Self::Error> {
+        if !value.is_empty() && olua::utils::is_table_array(&value) {
+            return Err(mlua::Error::FromLuaConversionError {
+                from: std::any::type_name_of_val(&value),
+                to: std::any::type_name::<Self>().to_string(),
+                message: Some(format!(
+                    "expected Dictionary got Array {value:#?}"
+                )),
+            });
+        }
+
+        unsafe { Self::try_from_table_unchecked(value) }
+    }
+}
+
+#[cfg(feature = "oximlua")]
+impl mlua::FromLua for Dictionary {
+    #[inline]
+    fn from_lua(value: mlua::Value, _lua: &mlua::Lua) -> mlua::Result<Self> {
+        let mlua::Value::Table(table) = value else {
+            return Err(mlua::Error::FromLuaConversionError {
+                from: std::any::type_name_of_val(&value),
+                to: std::any::type_name::<Self>().to_string(),
+                message: Some(format!("unexpected value {value:#?}")),
+            });
+        };
+
+        Self::try_from(table)
+    }
+}
+
+#[cfg(not(feature = "oximlua"))]
 impl lua::Pushable for Dictionary {
     #[inline]
     unsafe fn push(
@@ -438,6 +500,26 @@ impl lua::Pushable for Dictionary {
         }
 
         Ok(1)
+    }
+}
+
+#[cfg(feature = "oximlua")]
+impl TryFrom<Dictionary> for mlua::Table {
+    type Error = mlua::Error;
+
+    fn try_from(value: Dictionary) -> Result<Self, Self::Error> {
+        let lua = olua::get_nvim_lua().into_lua_err()?;
+        lua.create_table_from(
+            value.into_iter().filter(|(_, obj)| !obj.is_nil()),
+        )
+    }
+}
+
+#[cfg(feature = "oximlua")]
+impl mlua::IntoLua for Dictionary {
+    #[inline]
+    fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        mlua::Table::try_from(self)?.into_lua(lua)
     }
 }
 
