@@ -11,9 +11,12 @@
 #![deny(nonstandard_style)]
 #![deny(rustdoc::broken_intra_doc_links)]
 
+#[cfg(not(feature = "oximlua"))]
 #[doc(hidden)]
 pub mod entrypoint;
 mod error;
+#[cfg(feature = "oximlua")]
+mod init;
 mod toplevel;
 
 pub mod api {
@@ -35,6 +38,8 @@ pub mod libuv {
     pub use libuv::*;
 }
 
+#[cfg(not(feature = "oximlua"))]
+#[cfg_attr(docsrs, doc(cfg(not(feature = "oximlua"))))]
 pub mod lua {
     //! Low-level Rust bindings to [LuaJIT], the Lua version used by Neovim.
     //!
@@ -43,8 +48,8 @@ pub mod lua {
     pub use luajit::*;
 }
 
-#[cfg(feature = "mlua")]
-#[cfg_attr(docsrs, doc(cfg(feature = "mlua")))]
+#[cfg(all(feature = "mlua", not(feature = "oximlua")))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "mlua", not(feature = "oximlua")))))]
 pub mod mlua {
     //! Integrations with the [mlua] Rust crate providing safe Lua bindings.
     //!
@@ -82,12 +87,28 @@ pub mod mlua {
     }
 }
 
+#[cfg(feature = "oximlua")]
+#[cfg_attr(docsrs, doc(cfg(feature = "oximlua")))]
+pub mod olua {
+    //! Integrations to work alongside the [mlua] Rust crate.
+    //!
+    //! [mlua]: https://github.com/khvzak/mlua
+
+    pub use oximlua::*;
+}
+
 pub use error::{Error, Result};
+#[cfg(feature = "oximlua")]
+pub use init::init;
+#[cfg(not(feature = "oximlua"))]
 pub use luajit::{IntoResult, dbg, print};
+#[cfg(not(feature = "oximlua"))]
 pub use macros::plugin;
 #[cfg(feature = "test")]
 #[cfg_attr(docsrs, doc(cfg(feature = "test")))]
 pub use macros::test;
+#[cfg(feature = "oximlua")]
+pub use oximlua::{IntoResult, dbg, print};
 pub use types::*;
 #[cfg(feature = "test")]
 pub mod tests;
