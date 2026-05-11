@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
 use serde::Deserialize;
+use types::Object;
+#[cfg(not(feature = "oximlua"))]
 use types::{
-    Object,
     conversion::{self, FromObject},
     serde::Deserializer,
 };
@@ -39,12 +40,14 @@ pub struct AutocmdCallbackArgs {
     pub r#match: String,
 }
 
+#[cfg(not(feature = "oximlua"))]
 impl FromObject for AutocmdCallbackArgs {
     fn from_object(obj: Object) -> Result<Self, conversion::Error> {
         Self::deserialize(Deserializer::new(obj)).map_err(Into::into)
     }
 }
 
+#[cfg(not(feature = "oximlua"))]
 impl luajit::Poppable for AutocmdCallbackArgs {
     unsafe fn pop(
         lstate: *mut luajit::ffi::State,
@@ -53,5 +56,12 @@ impl luajit::Poppable for AutocmdCallbackArgs {
 
         Self::from_object(obj)
             .map_err(luajit::Error::pop_error_from_err::<Self, _>)
+    }
+}
+
+#[cfg(feature = "oximlua")]
+impl mlua::FromLua for AutocmdCallbackArgs {
+    fn from_lua(value: mlua::Value, _lua: &mlua::Lua) -> mlua::Result<Self> {
+        Self::deserialize(mlua::serde::Deserializer::new(value))
     }
 }

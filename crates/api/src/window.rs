@@ -1,8 +1,14 @@
+#[cfg(not(feature = "oximlua"))]
 use std::error::Error as StdError;
 use std::fmt;
 use std::result::Result as StdResult;
 
+#[cfg(not(feature = "oximlua"))]
 use luajit::{self as lua, Poppable, Pushable};
+#[cfg(feature = "oximlua")]
+use mlua::{ExternalError, FromLuaMulti, IntoLuaMulti};
+#[cfg(feature = "oximlua")]
+use oximlua as olua;
 use serde::{Deserialize, Serialize};
 use types::{
     self as nvim,
@@ -14,12 +20,13 @@ use types::{
     conversion::{self, FromObject, ToObject},
 };
 
+use crate::IntoResult;
 use crate::Result;
 use crate::choose;
 use crate::ffi::window::*;
 use crate::opts::WinTextHeightOpts;
 use crate::types::WinTextHeightInfos;
-use crate::{Buffer, IntoResult, TabPage};
+use crate::{Buffer, TabPage};
 
 /// A wrapper around a Neovim window handle.
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -61,6 +68,7 @@ impl FromObject for Window {
     }
 }
 
+#[cfg(not(feature = "oximlua"))]
 impl Poppable for Window {
     unsafe fn pop(
         lstate: *mut lua::ffi::State,
@@ -69,6 +77,7 @@ impl Poppable for Window {
     }
 }
 
+#[cfg(not(feature = "oximlua"))]
 impl Pushable for Window {
     unsafe fn push(
         self,
@@ -78,14 +87,14 @@ impl Pushable for Window {
     }
 }
 
-#[cfg(feature = "mlua")]
+#[cfg(any(feature = "mlua", feature = "oximlua"))]
 impl mlua::IntoLua for Window {
     fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
         self.handle().into_lua(lua)
     }
 }
 
-#[cfg(feature = "mlua")]
+#[cfg(any(feature = "mlua", feature = "oximlua"))]
 impl mlua::FromLua for Window {
     fn from_lua(value: mlua::Value, lua: &mlua::Lua) -> mlua::Result<Self> {
         WinHandle::from_lua(value, lua).map(Into::into)
@@ -105,6 +114,7 @@ impl Window {
         self.0
     }
 
+    #[cfg(not(feature = "oximlua"))]
     /// Binding to [`nvim_win_call()`][1].
     ///
     /// Calls a function with this window as the temporary current window.
@@ -148,6 +158,49 @@ impl Window {
         choose!(err, {
             fun.remove_from_lua_registry();
             Ok(Ret::from_object(obj)?)
+        })
+    }
+
+    #[cfg(feature = "oximlua")]
+    /// Binding to [`nvim_win_call()`][1].
+    ///
+    /// Calls a function with this window as the temporary current window.
+    ///
+    /// [1]: https://neovim.io/doc/user/api.html#nvim_win_call()
+    pub fn call<F, Res, Ret>(&self, fun: F) -> Result<Ret>
+    where
+        F: FnOnce(()) -> Res + mlua::MaybeSend + 'static,
+        Res: IntoResult<Ret>,
+        Res::Error: ExternalError + 'static,
+        Ret: IntoLuaMulti + FromLuaMulti,
+    {
+        let lua = olua::get_nvim_lua()?;
+        let fun = Function::from_fn_once(fun);
+        let mut err = nvim::Error::new();
+
+        let ref_or_nil =
+            unsafe { nvim_win_call(self.0, fun.lua_ref(), &mut err) };
+
+        let lua_ref = match ref_or_nil.kind() {
+            types::ObjectKind::LuaRef => unsafe {
+                ref_or_nil.as_luaref_unchecked()
+            },
+            types::ObjectKind::Nil => {
+                return Ok(Ret::from_lua_multi(mlua::MultiValue::new(), &lua)
+                    .map_err(oximlua::Error::from)?);
+            },
+            other => panic!("Unexpected object kind: {other:?}"),
+        };
+
+        let value = oximlua::get_registry_value(lua_ref)?;
+
+        choose!(err, {
+            unsafe { fun.remove_from_lua_registry() };
+            Ok(Ret::from_lua_multi(
+                value.into_lua_multi(&lua).map_err(oximlua::Error::from)?,
+                &lua,
+            )
+            .map_err(oximlua::Error::from)?)
         })
     }
 

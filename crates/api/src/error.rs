@@ -15,6 +15,10 @@ pub enum Error {
     #[error(transparent)]
     Nvim(#[from] types::Error),
 
+    #[cfg(feature = "oximlua")]
+    #[error(transparent)]
+    OxiMlua(#[from] oximlua::Error),
+
     #[error(transparent)]
     ObjectConversion(#[from] types::conversion::Error),
 

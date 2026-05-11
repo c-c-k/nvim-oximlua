@@ -43,8 +43,11 @@ pub use deprecated::*;
 pub use error::Error;
 use error::Result;
 pub use extmark::*;
+#[cfg(not(feature = "oximlua"))]
 pub use luajit::IntoResult;
 pub use options::*;
+#[cfg(feature = "oximlua")]
+pub use oximlua::IntoResult;
 pub use tabpage::*;
 pub use trait_utils::*;
 pub use vim::*;
