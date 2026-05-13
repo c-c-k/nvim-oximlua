@@ -5,8 +5,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// `nvim-oxi`'s error type.
 #[derive(Clone, Debug, ThisError)]
-#[cfg_attr(not(feature = "mlua"), derive(Eq, PartialEq))]
+#[cfg_attr(
+    not(any(feature = "mlua", feature = "oximlua")),
+    derive(Eq, PartialEq)
+)]
 pub enum Error {
+    #[cfg(not(feature = "oximlua"))]
     #[error(transparent)]
     Lua(#[from] luajit::Error),
 
@@ -29,7 +33,11 @@ pub enum Error {
     #[error(transparent)]
     Libuv(#[from] libuv::Error),
 
-    #[cfg(feature = "mlua")]
+    #[cfg(any(feature = "mlua", feature = "oximlua"))]
     #[error(transparent)]
     Mlua(#[from] mlua::Error),
+
+    #[cfg(feature = "oximlua")]
+    #[error(transparent)]
+    OxiMlua(#[from] oximlua::Error),
 }
