@@ -19,6 +19,7 @@ pub fn derive_opts_builder(input: TokenStream) -> TokenStream {
         .into()
 }
 
+#[cfg(all(feature = "plugin", not(feature = "oximlua")))]
 /// Marks a function as the entrypoint of the plugin.
 ///
 /// The function wrapped by this macro will be called by Neovim when the user

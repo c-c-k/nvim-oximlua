@@ -69,6 +69,24 @@ pub fn test(attrs: TokenStream, item: TokenStream) -> TokenStream {
         #nvim_oxi::tests::test_macro::plugin_body(__test_fn)
     };
 
+    #[cfg(not(feature = "oximlua"))]
+    let plugin_entry_point = quote! {
+        #[#nvim_oxi::plugin(nvim_oxi = #nvim_oxi)]
+        fn #plugin_name()  {
+            #plugin_body
+        }
+    };
+
+    #[cfg(feature = "oximlua")]
+    let plugin_entry_point = quote! {
+        #[mlua::lua_module]
+        fn #plugin_name(lua: &mlua::Lua) -> mlua::Result<bool> {
+            #nvim_oxi::init(lua)?;
+            #plugin_body;
+            Ok(false)
+        }
+    };
+
     quote! {
         #[test]
         #(#test_attrs)*
@@ -80,10 +98,7 @@ pub fn test(attrs: TokenStream, item: TokenStream) -> TokenStream {
             )#maybe_semicolon
         }
 
-        #[#nvim_oxi::plugin(nvim_oxi = #nvim_oxi)]
-        fn #plugin_name()  {
-            #plugin_body
-        }
+        #plugin_entry_point
     }
     .into()
 }

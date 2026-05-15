@@ -6,6 +6,7 @@ use syn::{ItemFn, Path, Token, parse_macro_input, parse_quote};
 
 use crate::common::{DuplicateError, Keyed, KeyedAttribute};
 
+#[cfg_attr(feature = "oximlua", allow(dead_code, reason = "disabled"))]
 #[inline]
 pub fn plugin(attr: TokenStream, item: TokenStream) -> TokenStream {
     let attrs = parse_macro_input!(attr as Attributes);
@@ -32,6 +33,7 @@ pub fn plugin(attr: TokenStream, item: TokenStream) -> TokenStream {
     .into()
 }
 
+#[cfg_attr(feature = "oximlua", allow(unused, reason = "unused by default"))]
 #[derive(Default)]
 struct Attributes {
     nvim_oxi: NvimOxi,
@@ -66,6 +68,7 @@ impl Parse for Attributes {
     }
 }
 
+#[cfg_attr(feature = "oximlua", allow(unused, reason = "unused by default"))]
 enum Attribute {
     NvimOxi(NvimOxi),
 }
