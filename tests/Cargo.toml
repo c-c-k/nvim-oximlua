@@ -12,10 +12,12 @@ default = ["neovim-0-11"]
 neovim-0-11 = ["nvim-oxi/neovim-0-11"]
 neovim-0-12 = ["neovim-0-11", "nvim-oxi/neovim-0-12"]
 neovim-nightly = ["neovim-0-12", "nvim-oxi/neovim-nightly"]
+oximlua = ["nvim-oxi/oximlua", "mlua", "mlua/error-send"]
 
 [dependencies]
 all_asserts = "2.3"
 thiserror = { workspace = true }
+mlua = { workspace = true, optional = true }
 
 [target.'cfg(not(any(target_os = "windows", target_env = "msvc")))'.dependencies]
 nvim-oxi = { path = "..", features = ["libuv", "mlua", "test"] }
