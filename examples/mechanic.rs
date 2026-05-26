@@ -1,3 +1,5 @@
+#![cfg(not(feature = "oximlua"))]
+
 use nvim_oxi::conversion::{Error as ConversionError, FromObject, ToObject};
 use nvim_oxi::serde::{Deserializer, Serializer};
 use nvim_oxi::{Dictionary, Function, Object, api, lua, print};

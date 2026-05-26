@@ -1,3 +1,5 @@
+#![cfg(not(feature = "oximlua"))]
+
 use std::thread;
 use std::time::Duration;
 

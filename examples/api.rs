@@ -1,3 +1,5 @@
+#![cfg(not(feature = "oximlua"))]
+
 use nvim_oxi::api::{self, Window, opts::*, types::*};
 use nvim_oxi::{Dictionary, Function, print};
 

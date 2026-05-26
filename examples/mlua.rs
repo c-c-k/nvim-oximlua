@@ -1,3 +1,5 @@
+#![cfg(not(feature = "oximlua"))]
+
 use mlua::prelude::LuaFunction;
 use nvim_oxi::{Result, mlua, print};
 
