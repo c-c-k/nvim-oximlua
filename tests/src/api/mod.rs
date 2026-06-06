@@ -3,6 +3,7 @@ mod buffer;
 mod command;
 mod extmark;
 mod global;
+mod highlight;
 mod tabpage;
 mod vimscript;
 mod win_config;

@@ -5,6 +5,8 @@ use types::{
     serde::Deserializer,
 };
 
+use crate::types::HighlightCterm;
+
 /// Attributes related to a highlight group.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Default)]
@@ -14,24 +16,33 @@ pub struct HighlightInfos {
     pub background: Option<u32>,
     pub bg_indexed: Option<bool>,
     pub blend: Option<u32>,
+    pub blink: Option<bool>,
     pub bold: Option<bool>,
+    pub conceal: Option<bool>,
+    pub cterm: Option<HighlightCterm>,
+    pub ctermbg: Option<u32>,
+    pub ctermfg: Option<u32>,
     pub default: Option<bool>,
+    pub dim: Option<bool>,
     pub fallback: Option<bool>,
     pub fg_indexed: Option<bool>,
     pub force: Option<bool>,
     #[serde(rename = "fg")]
     pub foreground: Option<u32>,
     pub italic: Option<bool>,
+    pub link: Option<String>,
+    pub nocombine: Option<bool>,
+    pub overline: Option<bool>,
     pub reverse: Option<bool>,
     #[serde(rename = "sp")]
     pub special: Option<u32>,
     pub standout: Option<bool>,
     pub strikethrough: Option<bool>,
     pub undercurl: Option<bool>,
-    pub underdash: Option<bool>,
-    pub underdot: Option<bool>,
+    pub underdashed: Option<bool>,
+    pub underdotted: Option<bool>,
+    pub underdouble: Option<bool>,
     pub underline: Option<bool>,
-    pub underlineline: Option<bool>,
 }
 
 impl FromObject for HighlightInfos {
