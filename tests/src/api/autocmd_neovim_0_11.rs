@@ -2,16 +2,16 @@ use all_asserts::*;
 use nvim_oxi::api::{self, Buffer, opts::*};
 
 #[nvim_oxi::test]
-fn clear_autocmds_current_buf() {
-    let opts = ClearAutocmdsOpts::builder().buf(0.into()).build();
+fn clear_autocmds_current_buf_compat() {
+    let opts = ClearAutocmdsOpts::builder().buffer(0.into()).build();
     assert_eq!(Ok(()), api::clear_autocmds(&opts));
 
-    let opts = ClearAutocmdsOpts::builder().buf(Buffer::current()).build();
+    let opts = ClearAutocmdsOpts::builder().buffer(Buffer::current()).build();
     assert_eq!(Ok(()), api::clear_autocmds(&opts));
 }
 
 #[nvim_oxi::test]
-fn clear_autocmds_events() {
+fn clear_autocmds_events_compat() {
     let opts = ClearAutocmdsOpts::builder()
         .events(["BufFilePre", "BufFilePost"])
         .build();
@@ -29,20 +29,20 @@ fn clear_autocmds_events() {
 }
 
 #[nvim_oxi::test]
-fn clear_autocmds_buf_n_patterns() {
+fn clear_autocmds_buffer_n_patterns_compat() {
     let opts = ClearAutocmdsOpts::builder()
-        .buf(0.into())
+        .buffer(0.into())
         .patterns(["*.py", "*.ts"])
         .build();
 
     assert!(
         api::clear_autocmds(&opts).is_err(),
-        "specifying both `buf` and `patterns` shouldn't be allowed"
+        "specifying both `buffer` and `patterns` shouldn't be allowed"
     );
 }
 
 #[nvim_oxi::test]
-fn create_augroup() {
+fn create_augroup_compat() {
     let opts = CreateAugroupOpts::builder().build();
     let id = api::create_augroup("Foo", &opts).expect("create_augroup failed");
 
@@ -53,9 +53,9 @@ fn create_augroup() {
 }
 
 #[nvim_oxi::test]
-fn create_autocmd() {
+fn create_autocmd_compat() {
     let opts = CreateAutocmdOpts::builder()
-        .buf(0.into())
+        .buffer(0.into())
         .desc("Does nothing, in the current buffer")
         .callback(|_args| Ok::<_, nvim_oxi::Error>(false))
         .build();
@@ -65,10 +65,10 @@ fn create_autocmd() {
 }
 
 #[nvim_oxi::test]
-fn create_autocmd_buf_n_patterns() {
+fn create_autocmd_buffer_n_patterns_compat() {
     let opts = CreateAutocmdOpts::builder()
         .command("echo 'hi there'")
-        .buf(0.into())
+        .buffer(0.into())
         .patterns(["*.py", "*.ts"])
         .build();
 
@@ -77,81 +77,7 @@ fn create_autocmd_buf_n_patterns() {
 }
 
 #[nvim_oxi::test]
-fn exec_autocmds() {
-    use std::cell::RefCell;
-    use std::rc::Rc;
-
-    let i = Rc::new(RefCell::new(0));
-
-    let cloned = Rc::clone(&i);
-
-    let opts = CreateAutocmdOpts::builder()
-        .callback(move |_args| {
-            let mut i = cloned.borrow_mut();
-            *i += 1;
-            Ok::<_, nvim_oxi::Error>(false)
-        })
-        .buf(Buffer::current())
-        .once(true)
-        .build();
-
-    let id = api::create_autocmd(["BufAdd"], &opts);
-    assert!(id.is_ok(), "{id:?}");
-
-    let opts = ExecAutocmdsOpts::builder().buf(Buffer::current()).build();
-
-    let res = api::exec_autocmds(["BufAdd"], &opts);
-    assert_eq!(Ok(()), res);
-    assert_eq!(1, *i.try_borrow().unwrap());
-
-    let res = api::exec_autocmds(["BufAdd"], &opts);
-    assert_eq!(Ok(()), res);
-    // `i` should still be equal to 1 since `once` was set to `true`.
-    assert_eq!(1, *i.try_borrow().unwrap());
-}
-
-#[nvim_oxi::test]
-fn get_autocmds() {
-    let autocmds =
-        api::get_autocmds(&Default::default()).expect("couldn't get autocmds");
-    assert_lt!(0, autocmds.collect::<Vec<_>>().len());
-}
-
-#[nvim_oxi::test]
-fn set_del_augroup_by_id() {
-    let id = api::create_augroup("Foo", &Default::default())
-        .expect("create_augroup failed");
-    assert_eq!(Ok(()), api::del_augroup_by_id(id));
-}
-
-#[nvim_oxi::test]
-fn set_del_augroup_by_name() {
-    let _ = api::create_augroup("Foo", &Default::default())
-        .expect("create_augroup failed");
-    assert_eq!(Ok(()), api::del_augroup_by_name("Foo"));
-}
-
-#[nvim_oxi::test]
-fn set_exec_del_autocmd() {
-    let opts = CreateAutocmdOpts::builder()
-        .callback(|_args| Ok::<_, nvim_oxi::Error>(false))
-        .build();
-
-    let id = api::create_autocmd(["BufAdd", "BufDelete"], &opts)
-        .expect("create_autocmd failed");
-
-    assert_eq!(
-        Ok(()),
-        api::exec_autocmds(["BufAdd"], &ExecAutocmdsOpts::default())
-    );
-
-    assert_eq!(Ok(()), api::del_autocmd(id));
-}
-
-// Backwards compatibility test for `...AutocmdOpts.buffer` that is
-// a soft deprecated alias for `...AutocmdOpts.buf` since NVIM 0.12.2.
-#[nvim_oxi::test]
-fn set_get_exec_clear_autocmd_buffer() {
+fn exec_autocmds_compat() {
     use std::cell::RefCell;
     use std::rc::Rc;
 
@@ -166,28 +92,58 @@ fn set_get_exec_clear_autocmd_buffer() {
             Ok::<_, nvim_oxi::Error>(false)
         })
         .buffer(Buffer::current())
+        .once(true)
         .build();
 
     let id = api::create_autocmd(["BufAdd"], &opts);
-    assert!(id.is_ok(), "couldn't create buffer autocmd: {id:?}");
-
-    let opts = GetAutocmdsOpts::builder().buffer(Buffer::current()).build();
-
-    let autocmds =
-        api::get_autocmds(&opts).expect("couldn't get buffer autocmds");
-    assert_lt!(0, autocmds.collect::<Vec<_>>().len());
+    assert!(id.is_ok(), "{id:?}");
 
     let opts = ExecAutocmdsOpts::builder().buffer(Buffer::current()).build();
 
     let res = api::exec_autocmds(["BufAdd"], &opts);
-    assert!(res.is_ok(), "couldn't exec buffer autocmds: {res:?}");
+    assert_eq!(Ok(()), res);
+    assert_eq!(1, *i.try_borrow().unwrap());
+
+    let res = api::exec_autocmds(["BufAdd"], &opts);
+    assert_eq!(Ok(()), res);
+    // `i` should still be equal to 1 since `once` was set to `true`.
+    assert_eq!(1, *i.try_borrow().unwrap());
+}
+
+#[nvim_oxi::test]
+fn get_autocmds_compat() {
+    let autocmds =
+        api::get_autocmds(&Default::default()).expect("couldn't get autocmds");
+    assert_lt!(0, autocmds.collect::<Vec<_>>().len());
+}
+
+#[nvim_oxi::test]
+fn set_del_augroup_by_id_compat() {
+    let id = api::create_augroup("Foo", &Default::default())
+        .expect("create_augroup failed");
+    assert_eq!(Ok(()), api::del_augroup_by_id(id));
+}
+
+#[nvim_oxi::test]
+fn set_del_augroup_by_name_compat() {
+    let _ = api::create_augroup("Foo", &Default::default())
+        .expect("create_augroup failed");
+    assert_eq!(Ok(()), api::del_augroup_by_name("Foo"));
+}
+
+#[nvim_oxi::test]
+fn set_exec_del_autocmd_compat() {
+    let opts = CreateAutocmdOpts::builder()
+        .callback(|_args| Ok::<_, nvim_oxi::Error>(false))
+        .build();
+
+    let id = api::create_autocmd(["BufAdd", "BufDelete"], &opts)
+        .expect("create_autocmd failed");
+
     assert_eq!(
-        1,
-        *i.try_borrow().unwrap(),
-        "exec buffer autocmds didn't exec new buffer autocmd"
+        Ok(()),
+        api::exec_autocmds(["BufAdd"], &ExecAutocmdsOpts::default())
     );
 
-    let opts = ClearAutocmdsOpts::builder().buffer(Buffer::current()).build();
-    let res = api::clear_autocmds(&opts);
-    assert!(res.is_ok(), "couldn't clear buffer autocmds: {id:?}");
+    assert_eq!(Ok(()), api::del_autocmd(id));
 }
