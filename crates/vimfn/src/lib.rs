@@ -6,9 +6,11 @@
 
 mod error;
 pub mod opts;
+mod registers;
 mod system;
 pub mod types;
 
 use error::Error;
 use error::Result;
+pub use registers::*;
 pub use system::*;
