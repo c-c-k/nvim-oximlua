@@ -32,6 +32,7 @@ luajit = { path = "./crates/luajit", package = "nvim-oxi-luajit" }
 macros = { path = "./crates/macros", package = "nvim-oxi-macros" }
 oximlua = { path = "./crates/oximlua", package = "nvim-oxi-oximlua" }
 types = { path = "./crates/types", package = "nvim-oxi-types" }
+vimfn = { path = "./crates/vimfn", package = "nvim-oxi-vimfn" }
 
 [workspace.lints.clippy]
 mixed_attributes_style = "allow"
@@ -99,6 +100,7 @@ luajit = { workspace = true }
 macros = { workspace = true, features = ["plugin"] }
 oximlua = { workspace = true, optional = true }
 types = { workspace = true, features = ["serde"] }
+vimfn = { workspace = true }
 
 cargo_metadata = { workspace = true, optional = true }
 mlua = { workspace = true, optional = true }

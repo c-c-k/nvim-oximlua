@@ -350,6 +350,7 @@ dependencies = [
  "nvim-oxi-macros",
  "nvim-oxi-oximlua",
  "nvim-oxi-types",
+ "nvim-oxi-vimfn",
  "serde",
  "thiserror",
  "tokio",
@@ -412,6 +413,21 @@ dependencies = [
  "nvim-oxi-luajit",
  "nvim-oxi-oximlua",
  "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "nvim-oxi-vimfn"
+version = "0.6.0"
+dependencies = [
+ "mlua",
+ "nvim-oxi-api",
+ "nvim-oxi-luajit",
+ "nvim-oxi-macros",
+ "nvim-oxi-oximlua",
+ "nvim-oxi-types",
+ "serde",
+ "serde_repr",
  "thiserror",
 ]
 

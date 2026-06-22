@@ -27,6 +27,14 @@ pub mod api {
     pub use api::*;
 }
 
+pub mod vimfn {
+    //! Bindings to the [Neovim Vimscript functions][fn].
+    //!
+    //! [fn]: https://neovim.io/doc/user/vimfn/#vimscript-functions
+    #[doc(inline)]
+    pub use vimfn::*;
+}
+
 #[cfg(feature = "libuv")]
 #[cfg_attr(docsrs, doc(cfg(feature = "libuv")))]
 pub mod libuv {
