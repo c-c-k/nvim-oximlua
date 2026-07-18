@@ -40,6 +40,7 @@ mod paste_phase;
 mod proc_infos;
 #[cfg(feature = "neovim-0-12")] // On 0.12 and Nightly.
 mod progress_message_status;
+mod register_infos;
 mod register_type;
 mod split_direction;
 mod split_modifier;
@@ -98,6 +99,7 @@ pub use paste_phase::*;
 pub use proc_infos::*;
 #[cfg(feature = "neovim-0-12")] // On 0.12 and Nightly.
 pub use progress_message_status::ProgressMessageStatus;
+pub use register_infos::*;
 pub use register_type::*;
 pub use split_direction::*;
 pub use split_modifier::*;

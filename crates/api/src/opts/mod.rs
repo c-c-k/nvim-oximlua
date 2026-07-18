@@ -30,6 +30,7 @@ mod set_extmark;
 mod set_highlight;
 mod set_keymap;
 mod set_mark;
+mod set_registry;
 mod stdpath;
 mod win_text_height;
 
@@ -62,5 +63,6 @@ pub use set_extmark::*;
 pub use set_highlight::*;
 pub use set_keymap::*;
 pub use set_mark::*;
+pub use set_registry::*;
 pub use stdpath::*;
 pub use win_text_height::*;
