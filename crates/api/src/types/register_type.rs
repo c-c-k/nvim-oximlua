@@ -1,44 +1,102 @@
-use serde::{Serialize, ser};
-use types::{conversion::FromObject, serde::Serializer};
+use std::{fmt::Display, str::FromStr};
+
+use serde::{Deserialize, Serialize};
+use types::{
+    Object,
+    String as NvimString,
+    conversion::{self, FromObject, ToObject},
+};
 
 #[non_exhaustive]
-#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize)]
+// #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
+#[derive(
+    Copy, Clone, Debug, Default, Eq, PartialEq, Hash, Serialize, Deserialize,
+)]
+#[serde(into = "String", try_from = "String")]
 pub enum RegisterType {
-    #[serde(serialize_with = "serialize_blockwise")]
-    BlockwiseVisual(Option<usize>),
-
-    #[serde(rename = "c")]
-    Charwise,
-
-    #[serde(rename = "l")]
-    Linewise,
-
-    #[serde(rename = "")]
+    #[default]
     Guess,
+    Char,
+    Line,
+    Block(Option<usize>),
 }
 
-fn serialize_blockwise<S>(
-    width: &Option<usize>,
-    serializer: S,
-) -> Result<S::Ok, S::Error>
-where
-    S: ser::Serializer,
-{
-    serializer.serialize_str(
-        &(match width {
-            Some(n) => format!("b{n}"),
-            None => "b".to_owned(),
-        }),
-    )
+impl Display for RegisterType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RegisterType::Guess => Ok(()),
+            RegisterType::Char => write!(f, "c"),
+            RegisterType::Line => write!(f, "l"),
+            RegisterType::Block(None) => write!(f, "b"),
+            RegisterType::Block(Some(width)) => {
+                write!(f, "b{width}")
+            },
+        }
+    }
 }
 
-impl From<RegisterType> for types::String {
-    fn from(reg_type: RegisterType) -> Self {
-        let obj = reg_type
-            .serialize(Serializer::new())
-            .expect("`RegisterType` is serializable");
+impl FromStr for RegisterType {
+    type Err = conversion::Error;
 
-        Self::from_object(obj)
-            .expect("`RegisterType` is serialized into a string")
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "" => Ok(RegisterType::Guess),
+            "v" | "c" => Ok(RegisterType::Char),
+            "V" | "l" => Ok(RegisterType::Line),
+            _ if let Some(width) = s.strip_prefix(['b', '\x16']) => {
+                match width {
+                    "" => Ok(RegisterType::Block(None)),
+                    width if let Ok(width) = width.parse::<usize>() => {
+                        Ok(RegisterType::Block(Some(width)))
+                    },
+                    _ => Err(conversion::Error::Other(format!(
+                        "invalid block width suffix: \"{width}\""
+                    ))),
+                }
+            },
+            _ => Err(conversion::Error::Other(format!(
+                "invalid register type string: \"{s}\""
+            ))),
+        }
+    }
+}
+
+impl TryFrom<&str> for RegisterType {
+    type Error = conversion::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+
+impl TryFrom<String> for RegisterType {
+    type Error = conversion::Error;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+
+impl From<RegisterType> for String {
+    fn from(value: RegisterType) -> Self {
+        value.to_string()
+    }
+}
+
+impl From<RegisterType> for NvimString {
+    fn from(value: RegisterType) -> Self {
+        Self::from(value.to_string())
+    }
+}
+
+impl FromObject for RegisterType {
+    fn from_object(obj: Object) -> Result<Self, conversion::Error> {
+        String::from_object(obj)?.parse()
+    }
+}
+
+impl ToObject for RegisterType {
+    fn to_object(self) -> Result<Object, conversion::Error> {
+        self.to_string().to_object()
     }
 }

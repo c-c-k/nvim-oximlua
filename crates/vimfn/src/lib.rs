@@ -5,7 +5,9 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod error;
+mod registers;
 mod system;
 
 use error::Result;
+pub use registers::*;
 pub use system::*;
