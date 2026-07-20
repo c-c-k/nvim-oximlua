@@ -67,7 +67,7 @@ jobs:
       - run: >
           RUSTFLAGS="-D warnings"
           RUSTDOCFLAGS="--cfg docsrs"
-          cargo doc --features neovim-nightly,oximlua
+          cargo doc --no-deps --features neovim-nightly,oximlua
 
   format:
     name: format
