@@ -17,6 +17,7 @@ proc-macro = true
 plugin = []
 test = ["plugin"]
 test-terminator = ["test"]
+oximlua = []
 
 [dependencies]
 quote = { workspace = true }
