@@ -11,6 +11,11 @@
 use core::ffi::{c_int, c_uint, c_void};
 use core::marker::{PhantomData, PhantomPinned};
 
+#[cfg(not(feature = "oximlua"))]
+use luajit::ffi::State;
+#[cfg(feature = "oximlua")]
+use mlua::ffi::lua_State as State;
+
 pub(crate) type uv_timer_cb =
     Option<unsafe extern "C" fn(handle: *mut uv_timer_t)>;
 
@@ -41,9 +46,7 @@ impl crate::ProperLayout for uv_timer_t {}
 
 unsafe extern "C" {
     // https://github.com/luvit/luv/blob/master/src/luv.c#L751
-    pub(crate) fn luv_loop(
-        lua_state: *mut luajit::ffi::State,
-    ) -> *mut uv_loop_t;
+    pub(crate) fn luv_loop(lua_state: *mut State) -> *mut uv_loop_t;
 
     pub(crate) fn uv_async_init(
         loop_: *mut uv_loop_t,

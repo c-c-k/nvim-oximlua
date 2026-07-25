@@ -1,6 +1,9 @@
 use core::cell::OnceCell;
 
+#[cfg(not(feature = "oximlua"))]
 use luajit::ffi::State;
+#[cfg(feature = "oximlua")]
+use mlua::ffi::lua_State as State;
 
 use crate::ffi;
 
