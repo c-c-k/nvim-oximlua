@@ -22,5 +22,16 @@ use mlua::{ExternalResult, Lua};
 /// }
 /// ```
 pub fn init(lua: &Lua) -> mlua::Result<()> {
-    oximlua::init(lua).into_lua_err()
+    types::arena_init();
+
+    oximlua::init(lua).into_lua_err()?;
+
+    #[cfg(feature = "libuv")]
+    unsafe {
+        lua.exec_raw::<()>((), |state| {
+            libuv::init(state);
+        })?;
+    }
+
+    Ok(())
 }
