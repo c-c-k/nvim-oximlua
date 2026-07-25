@@ -13,6 +13,7 @@ pub use crate::core::{
     get_registry_value,
     init,
     is_nvim_thread,
+    lua,
 };
 pub use crate::error::Error;
 pub use crate::into_result::IntoResult;
