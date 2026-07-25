@@ -78,11 +78,19 @@ oximlua = [
   "macros/oximlua",
   "types/oximlua",
   "vimfn/oximlua",
-  "dep:mlua",
+  "mlua",
   "dep:oximlua",
 ]
 test = ["macros/test", "dep:cargo_metadata"]
 test-terminator = ["test", "libuv", "macros/test-terminator"]
+
+# mlua re-exports
+async = ["mlua?/async"]
+error-send = ["mlua?/error-send"]
+serde = ["mlua?/serde"]
+macros = ["mlua?/macros"]
+anyhow = ["mlua?/anyhow"]
+userdata-wrappers = ["mlua?/userdata-wrappers"]
 
 [dependencies]
 api = { workspace = true }

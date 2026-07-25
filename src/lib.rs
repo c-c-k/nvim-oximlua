@@ -48,8 +48,8 @@ pub mod lua {
     pub use luajit::*;
 }
 
-#[cfg(all(feature = "mlua", not(feature = "oximlua")))]
-#[cfg_attr(docsrs, doc(cfg(all(feature = "mlua", not(feature = "oximlua")))))]
+#[cfg(feature = "mlua")]
+#[cfg_attr(docsrs, doc(cfg(feature = "mlua")))]
 pub mod mlua {
     //! Integrations with the [mlua] Rust crate providing safe Lua bindings.
     //!
@@ -57,6 +57,17 @@ pub mod mlua {
 
     pub use mlua::*;
 
+    #[cfg(feature = "oximlua")]
+    #[deprecated = "including this in what is otherwise a 1:1 re-export of \
+                    the `mlua` crate can cause confusion for new users. \
+                    Please use \
+                    [`nvim_oxi::olua::get_nvim_lua`](oximlua::get_nvim_lua) \
+                    or [`nvim_oxi::olua::lua`](oximlua::lua) instead."]
+    pub fn lua() -> mlua::Lua {
+        oximlua::lua()
+    }
+
+    #[cfg(not(feature = "oximlua"))]
     /// Returns a
     /// [`mlua::Lua`](https://docs.rs/mlua/latest/mlua/struct.Lua.html)
     /// instance which can be used to interact with Lua plugins.
