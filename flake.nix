@@ -1,5 +1,5 @@
 {
-  description = "nvim-oxi's development shell";
+  description = "nvim-oximlua's development shell";
 
   inputs = {
     neovim-0-12 = {

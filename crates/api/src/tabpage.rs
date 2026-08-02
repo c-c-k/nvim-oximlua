@@ -1,8 +1,6 @@
 use std::fmt;
 use std::result::Result as StdResult;
 
-#[cfg(not(feature = "oximlua"))]
-use luajit::{self as lua, Poppable, Pushable};
 use serde::{Deserialize, Serialize};
 use types::{
     self as nvim,
@@ -45,39 +43,18 @@ impl From<TabPage> for Object {
     }
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl Poppable for TabPage {
-    unsafe fn pop(
-        lstate: *mut lua::ffi::State,
-    ) -> std::result::Result<Self, lua::Error> {
-        TabHandle::pop(lstate).map(Into::into)
-    }
-}
-
-#[cfg(not(feature = "oximlua"))]
-impl Pushable for TabPage {
-    unsafe fn push(
-        self,
-        lstate: *mut lua::ffi::State,
-    ) -> std::result::Result<std::ffi::c_int, lua::Error> {
-        self.0.push(lstate)
-    }
-}
-
 impl FromObject for TabPage {
     fn from_object(obj: Object) -> StdResult<Self, conversion::Error> {
         Ok(TabHandle::from_object(obj)?.into())
     }
 }
 
-#[cfg(any(feature = "mlua", feature = "oximlua"))]
 impl mlua::IntoLua for TabPage {
     fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
         self.handle().into_lua(lua)
     }
 }
 
-#[cfg(any(feature = "mlua", feature = "oximlua"))]
 impl mlua::FromLua for TabPage {
     fn from_lua(value: mlua::Value, lua: &mlua::Lua) -> mlua::Result<Self> {
         TabHandle::from_lua(value, lua).map(Into::into)

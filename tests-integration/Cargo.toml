@@ -1,6 +1,6 @@
 [package]
-name = "tests"
-version = "0.0.0"
+name = "nvim-oximlua-tests-integration"
+version.workspace = true
 edition.workspace = true
 publish = false
 
@@ -9,22 +9,21 @@ crate-type = ["cdylib"]
 
 [features]
 default = ["neovim-0-11"]
-neovim-0-11 = ["nvim-oxi/neovim-0-11"]
-neovim-0-12 = ["neovim-0-11", "nvim-oxi/neovim-0-12"]
-neovim-nightly = ["neovim-0-12", "nvim-oxi/neovim-nightly"]
-oximlua = ["nvim-oxi/oximlua", "mlua", "mlua/error-send"]
+neovim-0-11 = ["nvim-oximlua/neovim-0-11"]
+neovim-0-12 = ["neovim-0-11", "nvim-oximlua/neovim-0-12"]
+neovim-nightly = ["neovim-0-12", "nvim-oximlua/neovim-nightly"]
 
 [dependencies]
 all_asserts = "2.3"
 thiserror = { workspace = true }
-mlua = { workspace = true, optional = true }
+mlua = { workspace = true, features = ["error-send"] }
 
 [target.'cfg(not(any(target_os = "windows", target_env = "msvc")))'.dependencies]
-nvim-oxi = { path = "..", features = ["libuv", "mlua", "test"] }
+nvim-oximlua = { path = "..", features = ["libuv", "test"] }
 
 # Enabling libuv will cause the build to fail on Windows.
 [target.'cfg(any(target_os = "windows", target_env = "msvc"))'.dependencies]
-nvim-oxi = { path = "..", features = ["mlua", "test"] }
+nvim-oximlua = { path = "..", features = ["test"] }
 
 [build-dependencies]
-nvim-oxi = { path = "..", features = ["test"] }
+nvim-oximlua = { path = "..", features = ["test"] }

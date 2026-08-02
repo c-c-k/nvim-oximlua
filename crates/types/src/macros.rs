@@ -1,4 +1,4 @@
-/// Same as [`format!`] but creates an [`nvim_oxi::String`](crate::String).
+/// Same as [`format!`] but creates an [`nvim_oximlua::String`](crate::String).
 #[macro_export]
 macro_rules! string {
     ($($tt:tt)*) => {{

@@ -5,7 +5,7 @@ use core::{ffi, ptr};
 use crate::String as NvimString;
 
 /// A builder that can be used to efficiently build
-/// [`nvim_oxi::String`](NvimString)s.
+/// [`nvim_oximlua::String`](NvimString)s.
 pub struct StringBuilder {
     /// The underlying string being constructed.
     inner: NvimString,

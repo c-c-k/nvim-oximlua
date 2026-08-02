@@ -1,6 +1,6 @@
 [package]
-name = "nvim-oxi-macros"
-description = "Proc macros for nvim-oxi"
+name = "nvim-oximlua-macros"
+description = "Proc macros for nvim-oximlua"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -17,7 +17,6 @@ proc-macro = true
 plugin = []
 test = ["plugin"]
 test-terminator = ["test"]
-oximlua = []
 
 [dependencies]
 quote = { workspace = true }

@@ -2,11 +2,6 @@ use std::path::PathBuf;
 
 use serde::Deserialize;
 use types::Object;
-#[cfg(not(feature = "oximlua"))]
-use types::{
-    conversion::{self, FromObject},
-    serde::Deserializer,
-};
 
 use crate::Buffer;
 
@@ -18,7 +13,7 @@ pub struct AutocmdCallbackArgs {
     pub buffer: Buffer,
 
     /// Arbitrary data passed to
-    /// [`nvim_oxi::api::exec_autocmds`](crate::exec_autocmds).
+    /// [`nvim_oximlua::api::exec_autocmds`](crate::exec_autocmds).
     #[serde(default)]
     pub data: Object,
 
@@ -40,26 +35,6 @@ pub struct AutocmdCallbackArgs {
     pub r#match: String,
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl FromObject for AutocmdCallbackArgs {
-    fn from_object(obj: Object) -> Result<Self, conversion::Error> {
-        Self::deserialize(Deserializer::new(obj)).map_err(Into::into)
-    }
-}
-
-#[cfg(not(feature = "oximlua"))]
-impl luajit::Poppable for AutocmdCallbackArgs {
-    unsafe fn pop(
-        lstate: *mut luajit::ffi::State,
-    ) -> Result<Self, luajit::Error> {
-        let obj = Object::pop(lstate)?;
-
-        Self::from_object(obj)
-            .map_err(luajit::Error::pop_error_from_err::<Self, _>)
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl mlua::FromLua for AutocmdCallbackArgs {
     fn from_lua(value: mlua::Value, _lua: &mlua::Lua) -> mlua::Result<Self> {
         Self::deserialize(mlua::serde::Deserializer::new(value))

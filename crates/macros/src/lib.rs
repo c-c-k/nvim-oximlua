@@ -19,7 +19,7 @@ pub fn derive_opts_builder(input: TokenStream) -> TokenStream {
         .into()
 }
 
-#[cfg(all(feature = "plugin", not(feature = "oximlua")))]
+#[cfg(all(feature = "plugin", false))] // TODO: Adjust to nvim-oximlua
 /// Marks a function as the entrypoint of the plugin.
 ///
 /// The function wrapped by this macro will be called by Neovim when the user
@@ -98,9 +98,9 @@ pub fn plugin(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// # Examples
 ///
 /// ```ignore
-/// use nvim_oxi::api;
+/// use nvim_oximlua::api;
 ///
-/// #[nvim_oxi::test]
+/// #[nvim_oximlua::test]
 /// fn set_get_del_var() {
 ///     api::set_var("foo", 42).unwrap();
 ///     assert_eq!(Ok(42), api::get_var("foo"));
@@ -112,8 +112,8 @@ pub fn plugin(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// `Debug`:
 ///
 /// ```ignore
-/// # use nvim_oxi::api;
-/// #[nvim_oxi::test]
+/// # use nvim_oximlua::api;
+/// #[nvim_oximlua::test]
 /// fn print_42() -> Result<(), api::Error> {
 ///     api::command("lua print(42)")
 /// }
@@ -121,10 +121,10 @@ pub fn plugin(attr: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// # Attributes
 ///
-/// ## `nvim-oxi`
+/// ## `nvim-oximlua`
 ///
-/// Exactly the same as the `nvim-oxi` attribute on the [`macro@plugin`] macro.
-/// See [its documentation](macro@plugin#nvim-oxi) for more information.
+/// Exactly the same as the `nvim-oximlua` attribute on the [`macro@plugin`] macro.
+/// See [its documentation](macro@plugin#nvim-oximlua) for more information.
 ///
 /// ## `cmd`
 ///
@@ -133,8 +133,8 @@ pub fn plugin(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// environment in which the test will run.
 ///
 /// ```ignore
-/// # use nvim_oxi::api;
-/// #[nvim_oxi::test(cmd = "lua print('The answer is...')")]
+/// # use nvim_oximlua::api;
+/// #[nvim_oximlua::test(cmd = "lua print('The answer is...')")]
 /// fn print_42() -> Result<(), api::Error> {
 ///     api::command("lua print(42)")
 /// }

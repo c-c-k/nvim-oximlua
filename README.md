@@ -1,3 +1,5 @@
+TODO: Adjust to nvim-oximlua
+
 # 🔗 nvim-oxi
 
 [![Latest version]](https://crates.io/crates/nvim-oxi)

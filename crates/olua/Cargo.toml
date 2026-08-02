@@ -1,6 +1,6 @@
 [package]
-name = "nvim-oxi-luajit"
-description = "Rust bindings to LuaJIT for nvim-oxi"
+name = "nvim-oximlua-olua"
+description = "core utils and mlua adapter for nvim-oximlua"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -11,6 +11,7 @@ license.workspace = true
 keywords.workspace = true
 
 [dependencies]
+mlua = { workspace = true }
 thiserror = { workspace = true }
 
 [lints]

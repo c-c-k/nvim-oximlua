@@ -1,14 +1,5 @@
 use std::borrow::Cow;
-#[cfg(not(feature = "oximlua"))]
-use std::ffi::c_int;
 use std::mem::ManuallyDrop;
-
-#[cfg(not(feature = "oximlua"))]
-use lua::{Poppable, Pushable, ffi::*};
-#[cfg(not(feature = "oximlua"))]
-use luajit as lua;
-#[cfg(feature = "oximlua")]
-use oximlua as olua;
 
 use crate::{
     Array,
@@ -502,7 +493,6 @@ impl Clone for Object {
             },
             ObjectKind::LuaRef => {
                 //unsafe {
-                // #[cfg(feature = "oximlua")]
                 // Function::add_cache_ref_count(self.data.luaref);
                 clone_copy!(self, luaref)
             },
@@ -525,7 +515,6 @@ impl Drop for Object {
                 ManuallyDrop::drop(&mut self.data.dictionary)
             },
 
-            // #[cfg(feature = "oximlua")]
             // ObjectKind::LuaRef => unsafe {
             //     Function::remove_cache_ref_count(self.data.luaref)
             // },
@@ -604,7 +593,6 @@ from_man_drop!(Dictionary, Dictionary, dictionary);
 
 impl<A, R> From<Function<A, R>> for Object {
     fn from(fun: Function<A, R>) -> Self {
-        // #[cfg(feature = "oximlua")]
         // unsafe {
         //     Function::add_cache_ref_count(fun.lua_ref);
         // }
@@ -717,31 +705,6 @@ where
     }
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl Pushable for Object {
-    unsafe fn push(self, lstate: *mut State) -> Result<c_int, lua::Error> {
-        match self.kind() {
-            ObjectKind::Nil => ().push(lstate),
-            ObjectKind::Boolean => self.as_boolean_unchecked().push(lstate),
-            ObjectKind::Integer
-            | ObjectKind::Buffer
-            | ObjectKind::Window
-            | ObjectKind::TabPage => self.as_integer_unchecked().push(lstate),
-            ObjectKind::Float => self.as_float_unchecked().push(lstate),
-            ObjectKind::String => self.into_string_unchecked().push(lstate),
-            ObjectKind::Array => self.into_array_unchecked().push(lstate),
-            ObjectKind::Dictionary => {
-                self.into_dictionary_unchecked().push(lstate)
-            },
-            ObjectKind::LuaRef => {
-                Function::<(), ()>::from_ref(self.as_luaref_unchecked())
-                    .push(lstate)
-            },
-        }
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl mlua::IntoLua for Object {
     fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
         use mlua::Value;
@@ -774,60 +737,6 @@ impl mlua::IntoLua for Object {
     }
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl Poppable for Object {
-    unsafe fn pop(lstate: *mut State) -> Result<Self, lua::Error> {
-        if lua_gettop(lstate) == 0 {
-            return Ok(Self::nil());
-        }
-
-        match lua_type(lstate, -1) {
-            LUA_TNIL => <()>::pop(lstate).map(Into::into),
-
-            LUA_TBOOLEAN => bool::pop(lstate).map(Into::into),
-
-            LUA_TNUMBER => {
-                let n = Number::pop(lstate)?;
-
-                // This checks that the number is in the range (i32::MIN,
-                // i32::MAX) andd that it has no fractional component.
-                if n == (n as c_int) as Number {
-                    Ok(Object::from(n as c_int))
-                } else {
-                    Ok(Object::from(n))
-                }
-            },
-
-            LUA_TSTRING => NvimString::pop(lstate).map(Into::into),
-
-            LUA_TTABLE => {
-                if lua::utils::is_table_array(lstate, -1) {
-                    Array::pop(lstate).map(Into::into)
-                } else {
-                    Dictionary::pop(lstate).map(Into::into)
-                }
-            },
-
-            LUA_TFUNCTION => Function::<(), ()>::pop(lstate).map(Into::into),
-
-            LUA_TNONE => Err(lua::Error::PopEmptyStack),
-
-            LUA_TLIGHTUSERDATA | LUA_TUSERDATA | LUA_TTHREAD => {
-                let typename = lua::utils::debug_type(lstate, -1);
-                lua_pop(lstate, 1);
-
-                Err(lua::Error::pop_error(
-                    "Object",
-                    format!("unexpected value of type {typename}"),
-                ))
-            },
-
-            _ => unreachable!(),
-        }
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl mlua::FromLua for Object {
     fn from_lua(value: mlua::Value, _lua: &mlua::Lua) -> mlua::Result<Self> {
         match value {

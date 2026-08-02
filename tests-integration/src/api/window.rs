@@ -1,20 +1,20 @@
-use nvim_oxi::api::{self, Buffer, TabPage, Window, opts::*, types::*};
+use nvim_oximlua::api::{self, Buffer, TabPage, Window, opts::*, types::*};
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn win_call_nil() {
     let win = Window::current();
     let res = win.call(|_| ());
     assert_eq!(Ok(()), res);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn win_call_int() {
     let win = Window::current();
     let res = win.call(|_| 42);
     assert_eq!(Ok(42), res);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn close_hide() {
     let config = WindowConfig::builder()
         .relative(WindowRelativeTo::Editor)
@@ -33,17 +33,17 @@ fn close_hide() {
     assert_eq!(Ok(()), win.hide());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn win_get_number() {
     assert_eq!(Ok(1), Window::current().get_number());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_position() {
     assert_eq!(Ok((0, 0)), Window::current().get_position());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_set_buf() {
     let mut win = Window::current();
 
@@ -60,7 +60,7 @@ fn get_set_buf() {
     assert_eq!(Ok(()), res);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_set_height_width() {
     let config = WindowConfig::builder()
         .relative(WindowRelativeTo::Editor)
@@ -84,12 +84,12 @@ fn get_set_height_width() {
     assert_eq!(10, win.get_width().unwrap());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_tabpage() {
     assert_eq!(Ok(TabPage::current()), Window::current().get_tabpage())
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn set_get_cursor() {
     let mut buf = Buffer::current();
     buf.set_lines(.., true, ["foo"]).unwrap();
@@ -107,7 +107,7 @@ fn set_get_cursor() {
     assert_eq!(Ok((1, 0)), win.get_cursor());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn win_set_get_option_value() {
     let win = Window::current();
     let opts = OptionOpts::builder().win(win.clone()).build();
@@ -119,7 +119,7 @@ fn win_set_get_option_value() {
     assert!(!api::get_option_value::<bool>("spell", &opts).unwrap());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn win_set_get_del_var() {
     let mut win = Window::current();
     win.set_var("foo", 42).unwrap();

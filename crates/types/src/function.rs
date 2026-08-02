@@ -1,21 +1,34 @@
-use std::cell::RefCell;
-use std::error::Error as StdError;
-use std::ffi::c_int;
 use std::fmt;
 use std::marker::PhantomData;
 
-use luajit::{self as lua, IntoResult, Poppable, Pushable, ffi};
+use mlua::{ExternalError, FromLuaMulti, IntoLuaMulti};
+use olua::IntoResult;
+use olua::WrapFn;
 
-use crate::{Error, LuaRef};
+use crate::LuaRef;
 
 /// A wrapper around a Lua reference to a function stored in the Lua registry.
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Eq, PartialEq, Hash)]
 pub struct Function<A, R> {
     pub(crate) lua_ref: LuaRef,
     _pd: (PhantomData<A>, PhantomData<R>),
 }
 
-impl<A, R> fmt::Debug for Function<A, R> {
+impl<A, R> Clone for Function<A, R>
+where
+    A: IntoLuaMulti,
+    R: FromLuaMulti,
+{
+    fn clone(&self) -> Self {
+        Self::from_ref(self.lua_ref)
+    }
+}
+
+impl<A, R> fmt::Debug for Function<A, R>
+where
+    A: IntoLuaMulti,
+    R: FromLuaMulti,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -29,45 +42,59 @@ impl<A, R> fmt::Debug for Function<A, R> {
 
 impl<A, R, F, O> From<F> for Function<A, R>
 where
-    F: Fn(A) -> O + 'static,
-    A: Poppable,
+    F: Fn(A) -> O + mlua::MaybeSend + 'static,
+    A: FromLuaMulti,
     O: IntoResult<R>,
-    R: Pushable,
-    O::Error: StdError + 'static,
+    R: IntoLuaMulti,
+    O::Error: ExternalError + 'static,
 {
     fn from(fun: F) -> Function<A, R> {
         Function::from_fn_mut(fun)
     }
 }
 
-impl<A, R> Poppable for Function<A, R> {
-    unsafe fn pop(state: *mut lua::ffi::State) -> Result<Self, lua::Error> {
-        if ffi::lua_gettop(state) == 0 {
-            return Err(lua::Error::PopEmptyStack);
-        }
+impl<A, R> From<mlua::Function> for Function<A, R> {
+    fn from(fun: mlua::Function) -> Self {
+        let lua_ref = unsafe { olua::add_registry_value(fun) }.unwrap();
+        Self::from_ref(lua_ref)
+    }
+}
 
-        match ffi::lua_type(state, -1) {
-            ffi::LUA_TFUNCTION => {
-                let lua_ref = ffi::luaL_ref(state, ffi::LUA_REGISTRYINDEX);
-                // TODO: check `lua_ref`.
-                Ok(Self::from_ref(lua_ref))
-            },
+impl<A, R> From<&Function<A, R>> for mlua::Function {
+    fn from(fun: &Function<A, R>) -> Self {
+        olua::get_registry_value(fun.lua_ref())
+            .unwrap()
+            .as_function()
+            .unwrap()
+            .to_owned()
+    }
+}
 
-            other => Err(lua::Error::pop_wrong_type::<Self>(
-                ffi::LUA_TFUNCTION,
-                other,
-            )),
+impl<A, R> From<Function<A, R>> for mlua::Function {
+    fn from(fun: Function<A, R>) -> Self {
+        Self::from(&fun)
+    }
+}
+
+impl<A, R> mlua::FromLua for Function<A, R> {
+    fn from_lua(value: mlua::Value, _lua: &mlua::Lua) -> mlua::Result<Self> {
+        if let mlua::Value::Function(fun) = value {
+            Ok(Function::from(fun))
+        } else {
+            Err(mlua::Error::FromLuaConversionError {
+                from: std::any::type_name_of_val(&value),
+                to: std::any::type_name::<Self>().to_string(),
+                message: Some(
+                    "expected `<mlua::Value::Function>`".to_string(),
+                ),
+            })
         }
     }
 }
 
-impl<A, R> Pushable for Function<A, R> {
-    unsafe fn push(
-        self,
-        state: *mut lua::ffi::State,
-    ) -> Result<c_int, lua::Error> {
-        ffi::lua_rawgeti(state, ffi::LUA_REGISTRYINDEX, self.lua_ref);
-        Ok(1)
+impl<A, R> mlua::IntoLua for Function<A, R> {
+    fn into_lua(self, _lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
+        Ok(mlua::Value::Function(mlua::Function::from(self)))
     }
 }
 
@@ -83,68 +110,52 @@ impl<A, R> Function<A, R> {
 
     pub fn from_fn<F, O>(fun: F) -> Self
     where
-        F: Fn(A) -> O + 'static,
-        A: Poppable,
+        F: Fn(A) -> O + mlua::MaybeSend + 'static,
+        A: FromLuaMulti,
         O: IntoResult<R>,
-        R: Pushable,
-        O::Error: StdError + 'static,
+        R: IntoLuaMulti,
+        O::Error: ExternalError + 'static,
     {
-        Self::from_ref(lua::function::store(fun))
+        Function::from(WrapFn::wrap(fun).unwrap())
     }
 
     pub fn from_fn_mut<F, O>(fun: F) -> Self
     where
-        F: FnMut(A) -> O + 'static,
-        A: Poppable,
+        F: FnMut(A) -> O + mlua::MaybeSend + 'static,
+        A: FromLuaMulti,
         O: IntoResult<R>,
-        R: Pushable,
-        O::Error: StdError + 'static,
+        R: IntoLuaMulti,
+        O::Error: ExternalError + 'static,
     {
-        let fun = RefCell::new(fun);
-
-        Self::from_fn(move |args| {
-            let fun = &mut *fun.try_borrow_mut().map_err(Error::from_err)?;
-
-            fun(args).into_result().map_err(Error::from_err)
-        })
+        Function::from(WrapFn::wrap_mut(fun).unwrap())
     }
 
     pub fn from_fn_once<F, O>(fun: F) -> Self
     where
-        F: FnOnce(A) -> O + 'static,
-        A: Poppable,
+        F: FnOnce(A) -> O + mlua::MaybeSend + 'static,
+        A: FromLuaMulti,
         O: IntoResult<R>,
-        R: Pushable,
-        O::Error: StdError + 'static,
+        R: IntoLuaMulti,
+        O::Error: ExternalError + 'static,
     {
-        let fun = RefCell::new(Some(fun));
-
-        Self::from_fn(move |args| {
-            let fun = fun
-                .try_borrow_mut()
-                .map_err(Error::from_err)?
-                .take()
-                .ok_or_else(|| {
-                    Error::from_str("Cannot call function twice")
-                })?;
-
-            fun(args).into_result().map_err(Error::from_err)
-        })
+        Function::from(WrapFn::wrap_once(fun).unwrap())
     }
 
-    pub fn call(&self, args: A) -> Result<R, lua::Error>
+    pub fn call(&self, args: A) -> mlua::Result<R>
     where
-        A: Pushable,
-        R: Poppable,
+        A: IntoLuaMulti,
+        R: FromLuaMulti,
     {
-        lua::function::call(self.lua_ref, args)
+        mlua::Function::from(self).call::<R>(args)
     }
 
     /// Consumes the `Function`, removing the reference stored in the Lua
     /// registry.
     #[doc(hidden)]
-    pub fn remove_from_lua_registry(self) {
-        lua::function::remove(self.lua_ref)
+    pub unsafe fn remove_from_lua_registry(self) {
+        unsafe {
+            olua::free_registry_lua_ref(self.lua_ref).unwrap();
+        }
     }
 }
 
@@ -152,13 +163,18 @@ impl<A, R> Function<A, R> {
 mod serde {
     use std::fmt;
 
+    use mlua::{FromLuaMulti, IntoLuaMulti};
     use serde::de::{self, Deserialize, Deserializer, Visitor};
     use serde::ser::{Serialize, Serializer};
 
     use super::Function;
     use crate::LuaRef;
 
-    impl<A, R> Serialize for Function<A, R> {
+    impl<A, R> Serialize for Function<A, R>
+    where
+        A: IntoLuaMulti,
+        R: FromLuaMulti,
+    {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
@@ -167,7 +183,11 @@ mod serde {
         }
     }
 
-    impl<'de, A, R> Deserialize<'de> for Function<A, R> {
+    impl<'de, A, R> Deserialize<'de> for Function<A, R>
+    where
+        A: IntoLuaMulti,
+        R: FromLuaMulti,
+    {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
             D: Deserializer<'de>,
@@ -176,7 +196,11 @@ mod serde {
 
             struct FunctionVisitor<A, R>(PhantomData<A>, PhantomData<R>);
 
-            impl<A, R> Visitor<'_> for FunctionVisitor<A, R> {
+            impl<A, R> Visitor<'_> for FunctionVisitor<A, R>
+            where
+                A: IntoLuaMulti,
+                R: FromLuaMulti,
+            {
                 type Value = Function<A, R>;
 
                 fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {

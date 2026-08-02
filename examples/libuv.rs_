@@ -1,4 +1,4 @@
-#![cfg(not(feature = "oximlua"))]
+#![cfg(false)] // TODO: Adjust to nvim-oximlua
 
 use std::thread;
 use std::time::Duration;

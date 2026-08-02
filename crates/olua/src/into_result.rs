@@ -8,7 +8,7 @@ use core::convert::Infallible;
 /// # Examples
 ///
 /// ```
-/// # use nvim_oxi_luajit::IntoResult;
+/// # use nvim_oximlua_olua::IntoResult;
 /// fn double<F: Fn() -> R, R: IntoResult<usize>>(
 ///     f: F,
 /// ) -> Result<usize, R::Error> {

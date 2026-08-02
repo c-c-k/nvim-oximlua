@@ -1,9 +1,9 @@
 use core::cell::Cell;
 use std::rc::Rc;
 
-use nvim_oxi::api::{self, Buffer, opts::*, types::*};
+use nvim_oximlua::api::{self, Buffer, opts::*, types::*};
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn add_highlight() {
     let mut buf = Buffer::current();
     let id = api::create_namespace("Foo");
@@ -11,7 +11,7 @@ fn add_highlight() {
     assert!(res.is_ok(), "{res:?}");
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn clear_namespace() {
     let mut buf = Buffer::current();
     let id = api::create_namespace("Foo");
@@ -19,7 +19,7 @@ fn clear_namespace() {
     assert_eq!(Ok(()), res);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_extmarks() {
     let mut buf = Buffer::current();
     let ns_id = api::create_namespace("Foo");
@@ -74,7 +74,7 @@ fn get_extmarks() {
     assert_eq!(Some(ExtmarkVirtTextPosition::Overlay), infos.virt_text_pos);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_namespaces() {
     let id = api::create_namespace("Foo");
 
@@ -85,7 +85,7 @@ fn get_namespaces() {
     assert_eq!(id, out);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn set_decoration_provider() {
     let id = api::create_namespace("Foo");
 
@@ -143,7 +143,7 @@ fn set_decoration_provider() {
     assert!(on_end_called.get());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn set_extmark_via_group_id() {
     let mut buf = Buffer::current();
 
@@ -187,7 +187,7 @@ fn set_extmark_via_group_id() {
     assert_eq!(virt_text_chunks.next(), None);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn set_get_del_extmark() {
     let mut buf = Buffer::current();
     let ns_id = api::create_namespace("Foo");
@@ -243,7 +243,7 @@ fn set_get_del_extmark() {
     assert_eq!(Ok(()), res);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn virt_text_pos_inline() {
     let mut buf = Buffer::current();
 

@@ -1,6 +1,6 @@
-use nvim_oxi::api::{self, Buffer, Window, types::*};
+use nvim_oximlua::api::{self, Buffer, Window, types::*};
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn open_hsplit() {
     let config = WindowConfig::builder()
         .split(SplitDirection::Below)
@@ -10,7 +10,7 @@ fn open_hsplit() {
     let _win = api::open_win(&Buffer::current(), true, &config).unwrap();
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn open_win_empty_config() {
     let buf = Buffer::current();
     let config = WindowConfig::builder().build();
@@ -21,7 +21,7 @@ fn open_win_empty_config() {
     );
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn open_win_basic_config() {
     let buf = api::create_buf(true, true).unwrap();
     let config = WindowConfig::builder()
@@ -48,7 +48,7 @@ fn open_win_basic_config() {
     assert_eq!(config.col.unwrap(), got.col.unwrap());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn open_win_full_config() {
     let buf = api::create_buf(true, true).unwrap();
 
@@ -86,7 +86,7 @@ fn open_win_full_config() {
     assert_eq!(config.border.unwrap(), got.border.unwrap());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn open_win_get_set_footer() {
     let buf = api::create_buf(true, true).unwrap();
 
@@ -105,7 +105,7 @@ fn open_win_get_set_footer() {
     let _config = window.get_config().unwrap();
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn open_split_win() {
     let buf = api::create_buf(true, true).unwrap();
     let old_win = api::get_current_win();
@@ -130,7 +130,7 @@ fn open_split_win() {
     assert_ne!(old_win, new_win);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn set_config() {
     let buf = api::create_buf(true, true).unwrap();
 

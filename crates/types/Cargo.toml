@@ -1,5 +1,5 @@
 [package]
-name = "nvim-oxi-types"
+name = "nvim-oximlua-types"
 description = "Rust bindings to types used by Neovim's C API"
 version.workspace = true
 edition.workspace = true
@@ -12,16 +12,13 @@ keywords.workspace = true
 
 [features]
 serde = ["dep:serde"]
-oximlua = ["dep:oximlua", "mlua"]
 
 [dependencies]
 libc = { workspace = true }
-luajit = { workspace = true }
+mlua = { workspace = true }
+olua = { workspace = true }
 serde = { workspace = true, optional = true }
 thiserror = { workspace = true }
-
-mlua = { workspace = true, optional = true }
-oximlua = { workspace = true, optional = true }
 
 [dev-dependencies]
 serde = { workspace = true, features = ["derive"] }

@@ -62,7 +62,7 @@ pub enum CommandComplete {
     Var,
 
     /// See `:h command-completion-customlist` for details.
-    /// *Note*: This variant contains a nvim_oxi::Function.
+    /// *Note*: This variant contains a nvim_oximlua::Function.
     #[serde(untagged, deserialize_with = "deserialize_callback")]
     Callback(CompleteCallbackFunc),
 

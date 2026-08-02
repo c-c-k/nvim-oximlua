@@ -236,9 +236,9 @@ dependencies = [
 
 [[package]]
 name = "lua-src"
-version = "548.1.1"
+version = "550.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00bc4bd1f1d5c65b30717333cbec4fa7aa378978940a1bca62f404498d423233"
+checksum = "e836dc8ae16806c9bdcf42003a88da27d163433e3f9684c52f0301258004a4fb"
 dependencies = [
  "cc",
 ]
@@ -282,15 +282,16 @@ dependencies = [
 
 [[package]]
 name = "mlua"
-version = "0.11.2"
+version = "0.11.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab2fea92b2adabd51808311b101551d6e3f8602b65e9fae51f7ad5b3d500f4cd"
+checksum = "ccd36acfa49ce6ee56d1307a061dd302c564eee757e6e4cd67eb4f7204846fab"
 dependencies = [
  "anyhow",
  "bstr",
  "either",
  "erased-serde",
  "futures-util",
+ "libc",
  "mlua-sys",
  "mlua_derive",
  "num-traits",
@@ -303,12 +304,13 @@ dependencies = [
 
 [[package]]
 name = "mlua-sys"
-version = "0.8.3"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d4dc9cfc5a7698899802e97480617d9726f7da78c910db989d4d0fd4991d900"
+checksum = "0f1c3a7fc7580227ece249fd90aa2fa3b39eb2b49d3aec5e103b3e85f2c3dfc8"
 dependencies = [
  "cc",
  "cfg-if",
+ "libc",
  "lua-src",
  "luajit-src",
  "pkg-config",
@@ -339,57 +341,47 @@ dependencies = [
 ]
 
 [[package]]
-name = "nvim-oxi"
-version = "0.6.0"
+name = "nvim-oximlua"
+version = "0.0.1"
 dependencies = [
  "cargo_metadata",
  "mlua",
- "nvim-oxi-api",
- "nvim-oxi-libuv",
- "nvim-oxi-luajit",
- "nvim-oxi-macros",
- "nvim-oxi-oximlua",
- "nvim-oxi-types",
- "nvim-oxi-vimfn",
+ "nvim-oximlua-api",
+ "nvim-oximlua-libuv",
+ "nvim-oximlua-macros",
+ "nvim-oximlua-olua",
+ "nvim-oximlua-types",
+ "nvim-oximlua-vimfn",
  "serde",
  "thiserror",
  "tokio",
 ]
 
 [[package]]
-name = "nvim-oxi-api"
-version = "0.6.0"
+name = "nvim-oximlua-api"
+version = "0.0.1"
 dependencies = [
  "mlua",
- "nvim-oxi-luajit",
- "nvim-oxi-macros",
- "nvim-oxi-oximlua",
- "nvim-oxi-types",
+ "nvim-oximlua-macros",
+ "nvim-oximlua-olua",
+ "nvim-oximlua-types",
  "serde",
  "serde_repr",
  "thiserror",
 ]
 
 [[package]]
-name = "nvim-oxi-libuv"
-version = "0.6.0"
+name = "nvim-oximlua-libuv"
+version = "0.0.1"
 dependencies = [
  "mlua",
- "nvim-oxi-luajit",
- "nvim-oxi-oximlua",
+ "nvim-oximlua-olua",
  "thiserror",
 ]
 
 [[package]]
-name = "nvim-oxi-luajit"
-version = "0.6.0"
-dependencies = [
- "thiserror",
-]
-
-[[package]]
-name = "nvim-oxi-macros"
-version = "0.6.0"
+name = "nvim-oximlua-macros"
+version = "0.0.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -397,35 +389,43 @@ dependencies = [
 ]
 
 [[package]]
-name = "nvim-oxi-oximlua"
-version = "0.6.0"
+name = "nvim-oximlua-olua"
+version = "0.0.1"
 dependencies = [
  "mlua",
  "thiserror",
 ]
 
 [[package]]
-name = "nvim-oxi-types"
-version = "0.6.0"
+name = "nvim-oximlua-tests-integration"
+version = "0.0.1"
+dependencies = [
+ "all_asserts",
+ "mlua",
+ "nvim-oximlua",
+ "thiserror",
+]
+
+[[package]]
+name = "nvim-oximlua-types"
+version = "0.0.1"
 dependencies = [
  "libc",
  "mlua",
- "nvim-oxi-luajit",
- "nvim-oxi-oximlua",
+ "nvim-oximlua-olua",
  "serde",
  "thiserror",
 ]
 
 [[package]]
-name = "nvim-oxi-vimfn"
-version = "0.6.0"
+name = "nvim-oximlua-vimfn"
+version = "0.0.1"
 dependencies = [
  "mlua",
- "nvim-oxi-api",
- "nvim-oxi-luajit",
- "nvim-oxi-macros",
- "nvim-oxi-oximlua",
- "nvim-oxi-types",
+ "nvim-oximlua-api",
+ "nvim-oximlua-macros",
+ "nvim-oximlua-olua",
+ "nvim-oximlua-types",
  "serde",
  "serde_repr",
  "thiserror",
@@ -730,16 +730,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "tests"
-version = "0.0.0"
-dependencies = [
- "all_asserts",
- "mlua",
- "nvim-oxi",
- "thiserror",
 ]
 
 [[package]]

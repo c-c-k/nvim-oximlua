@@ -1,13 +1,6 @@
-#[cfg(not(feature = "oximlua"))]
-use std::error::Error as StdError;
 use std::iter::FusedIterator;
 
-#[cfg(not(feature = "oximlua"))]
-use luajit::{Poppable, Pushable};
-#[cfg(feature = "oximlua")]
 use mlua::{ExternalError, FromLua, FromLuaMulti, IntoLuaMulti};
-#[cfg(feature = "oximlua")]
-use oximlua as olua;
 use types::{Array, Function, LuaRef, Object};
 use types::{HlGroupId, Integer};
 
@@ -74,22 +67,6 @@ pub trait ToFunction<A, R> {
     fn into_luaref(self) -> LuaRef;
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl<A, R, F, O> ToFunction<A, R> for F
-where
-    A: Poppable,
-    R: Pushable,
-    F: FnMut(A) -> O + 'static,
-    O: IntoResult<R>,
-    O::Error: StdError + 'static,
-{
-    #[inline]
-    fn into_luaref(self) -> LuaRef {
-        Function::from_fn_mut(self).lua_ref()
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl<A, R, F, O> ToFunction<A, R> for F
 where
     A: FromLuaMulti,
@@ -130,22 +107,6 @@ impl<A, R> StringOrFunction<A, R> for String {
     }
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl<F, A, R, O> StringOrFunction<A, R> for F
-where
-    F: FnMut(A) -> O + 'static,
-    A: Poppable,
-    R: Pushable,
-    O: IntoResult<R>,
-    O::Error: StdError + 'static,
-{
-    #[inline]
-    fn to_object(self) -> Object {
-        Function::from_fn_mut(self).into()
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl<F, A, R, O> StringOrFunction<A, R> for F
 where
     F: FnMut(A) -> O + 'static,
@@ -167,7 +128,6 @@ impl<A, R> StringOrFunction<A, R> for Function<A, R> {
     }
 }
 
-#[cfg(feature = "oximlua")]
 impl<A, R> StringOrFunction<A, R> for mlua::Function {
     #[inline]
     fn to_object(self) -> Object {
@@ -175,7 +135,6 @@ impl<A, R> StringOrFunction<A, R> for mlua::Function {
     }
 }
 
-#[cfg(feature = "oximlua")]
 impl<A, R> StringOrFunction<A, R> for mlua::Value {
     #[inline]
     fn to_object(self) -> Object {

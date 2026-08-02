@@ -1,7 +1,4 @@
-#[cfg(not(feature = "oximlua"))]
-use luajit::ffi::State;
-#[cfg(feature = "oximlua")]
-use mlua::ffi::lua_State as State;
+use mlua::ffi::lua_State;
 use types::*;
 
 use crate::opts::*;
@@ -79,7 +76,7 @@ unsafe extern "C" {
         end: Integer,
         strict_indexing: bool,
         arena: *mut Arena,
-        lstate: *mut State,
+        lstate: *mut lua_State,
         err: *mut Error,
     ) -> Array;
 
@@ -114,7 +111,7 @@ unsafe extern "C" {
         end_col: Integer,
         opts: *const GetTextOpts,
         arena: *mut Arena,
-        lstate: *mut State,
+        lstate: *mut lua_State,
         err: *mut Error,
     ) -> Array;
 

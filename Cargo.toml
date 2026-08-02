@@ -1,22 +1,24 @@
 [workspace]
-members = ["crates/*", "examples/*", "tests-integration"]
+# TODO: adjust examples to nvim-oximlua
+# members = ["crates/*", "examples/*", "tests-integration"]
+members = ["crates/*", "tests-integration"]
 resolver = "2"
 
 [workspace.package]
-version = "0.6.0"
+version = "0.0.1"
 edition = "2024"
-authors = ["Riccardo Mazzarini <me@noib3.dev>"]
+authors = ["Riccardo Mazzarini <me@noib3.dev>", "c-c-k <c-c-k@nym.hush.com>"]
 rust-version = "1.95.0"
-documentation = "https://docs.rs/nvim-oxi"
-repository = "https://github.com/noib3/nvim-oxi"
+documentation = "https://docs.rs/nvim-oximlua"
+repository = "https://github.com/c-c-k/nvim-oximlua"
 license = "MIT"
-keywords = ["bindings", "neovim", "nvim"]
+keywords = ["bindings", "neovim", "nvim", "mlua"]
 
 [workspace.dependencies]
 # 3rd-party dependencies.
 cargo_metadata = "0.23"
 libc = "0.2"
-mlua = { version = "0.11", features = ["luajit"] }
+mlua = { version = "0.11.6", features = ["luajit", "serde"] }
 proc-macro2 = "1"
 quote = "1"
 serde = "1"
@@ -26,13 +28,12 @@ thiserror = "2"
 tokio = "1"
 
 # Internal dependencies.
-api = { path = "./crates/api", package = "nvim-oxi-api" }
-libuv = { path = "./crates/libuv", package = "nvim-oxi-libuv" }
-luajit = { path = "./crates/luajit", package = "nvim-oxi-luajit" }
-macros = { path = "./crates/macros", package = "nvim-oxi-macros" }
-oximlua = { path = "./crates/oximlua", package = "nvim-oxi-oximlua" }
-types = { path = "./crates/types", package = "nvim-oxi-types" }
-vimfn = { path = "./crates/vimfn", package = "nvim-oxi-vimfn" }
+api = { path = "./crates/api", package = "nvim-oximlua-api" }
+libuv = { path = "./crates/libuv", package = "nvim-oximlua-libuv" }
+macros = { path = "./crates/macros", package = "nvim-oximlua-macros" }
+olua = { path = "./crates/olua", package = "nvim-oximlua-olua" }
+types = { path = "./crates/types", package = "nvim-oximlua-types" }
+vimfn = { path = "./crates/vimfn", package = "nvim-oximlua-vimfn" }
 
 [workspace.lints.clippy]
 mixed_attributes_style = "allow"
@@ -45,7 +46,7 @@ broken_intra_doc_links = "deny"
 private_intra_doc_links = "deny"
 
 [package]
-name = "nvim-oxi"
+name = "nvim-oximlua"
 description = "Rust bindings to all things Neovim"
 readme = "./README.md"
 version.workspace = true
@@ -68,71 +69,60 @@ neovim-0-11 = ["api/neovim-0-11"]
 neovim-0-12 = ["neovim-0-11", "api/neovim-0-12"]
 neovim-nightly = ["neovim-0-12", "api/neovim-nightly"]
 
-__docsrs = ["mlua?/vendored"]
-__no_docsrs = ["mlua?/module"]
+__docsrs = ["mlua/vendored"]
+__no_docsrs = ["mlua/module"]
 
 libuv = ["dep:libuv"]
-mlua = ["api/mlua", "dep:mlua"]
-oximlua = [
-  "api/oximlua",
-  "libuv?/oximlua",
-  "macros/oximlua",
-  "types/oximlua",
-  "vimfn/oximlua",
-  "mlua",
-  "dep:oximlua",
-]
 test = ["macros/test", "dep:cargo_metadata"]
 test-terminator = ["test", "libuv", "macros/test-terminator"]
 
 # mlua re-exports
-async = ["mlua?/async"]
-error-send = ["mlua?/error-send"]
-serde = ["mlua?/serde"]
-macros = ["mlua?/macros"]
-anyhow = ["mlua?/anyhow"]
-userdata-wrappers = ["mlua?/userdata-wrappers"]
+async = ["mlua/async"]
+error-send = ["mlua/error-send"]
+macros = ["mlua/macros"]
+anyhow = ["mlua/anyhow"]
+userdata-wrappers = ["mlua/userdata-wrappers"]
 
 [dependencies]
 api = { workspace = true }
 libuv = { workspace = true, optional = true }
-luajit = { workspace = true }
 macros = { workspace = true, features = ["plugin"] }
-oximlua = { workspace = true, optional = true }
+olua = { workspace = true }
 types = { workspace = true, features = ["serde"] }
 vimfn = { workspace = true }
 
 cargo_metadata = { workspace = true, optional = true }
-mlua = { workspace = true, optional = true }
+mlua = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
 serde = { workspace = true, features = ["derive"] }
 tokio = { workspace = true, features = ["full"] }
 
-[[example]]
-name = "api"
-path = "./examples/api.rs"
-crate-type = ["cdylib"]
-
-[[example]]
-name = "calc"
-path = "./examples/calc.rs"
-crate-type = ["cdylib"]
-
-[[example]]
-name = "libuv"
-path = "./examples/libuv.rs"
-crate-type = ["cdylib"]
-required-features = ["libuv"]
-
-[[example]]
-name = "mechanic"
-path = "./examples/mechanic.rs"
-crate-type = ["cdylib"]
-
-[[example]]
-name = "mlua"
-path = "./examples/mlua.rs"
-crate-type = ["cdylib"]
-required-features = ["mlua"]
+# TODO: Adjust to nvim-oximlua
+#
+# [[example]]
+# name = "api"
+# path = "./examples/api.rs"
+# crate-type = ["cdylib"]
+#
+# [[example]]
+# name = "calc"
+# path = "./examples/calc.rs"
+# crate-type = ["cdylib"]
+#
+# [[example]]
+# name = "libuv"
+# path = "./examples/libuv.rs"
+# crate-type = ["cdylib"]
+# required-features = ["libuv"]
+#
+# [[example]]
+# name = "mechanic"
+# path = "./examples/mechanic.rs"
+# crate-type = ["cdylib"]
+#
+# [[example]]
+# name = "mlua"
+# path = "./examples/mlua.rs"
+# crate-type = ["cdylib"]

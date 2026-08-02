@@ -1,6 +1,6 @@
 [package]
-name = "nvim-oxi-vimfn"
-description = "Rust bindings to Neovim's Vimscript functions for nvim-oxi"
+name = "nvim-oximlua-vimfn"
+description = "Rust bindings to Neovim's Vimscript functions for nvim-oximlua"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -20,23 +20,20 @@ default = ["__no_docsrs"]
 neovim-0-11 = []
 neovim-0-12 = ["neovim-0-11"]
 neovim-nightly = ["neovim-0-12"]
-mlua = ["dep:mlua"]
-oximlua = ["dep:oximlua", "dep:mlua", "mlua/serde"]
 
-__docsrs = ["mlua?/vendored"]
-__no_docsrs = ["mlua?/module"]
+__docsrs = ["mlua/vendored"]
+__no_docsrs = ["mlua/module"]
 
 [dependencies]
 api = { workspace = true }
-luajit = { workspace = true }
 macros = { workspace = true }
+mlua = { workspace = true, features = ["serde"] }
+olua = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_repr = { workspace = true }
 thiserror = { workspace = true }
 types = { workspace = true, features = ["serde"] }
 
-mlua = { workspace = true, optional = true }
-oximlua = { workspace = true, optional = true }
 
 [lints]
 workspace = true

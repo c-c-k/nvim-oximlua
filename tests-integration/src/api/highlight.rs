@@ -1,6 +1,6 @@
-use nvim_oxi::api::{self, opts::*, types::*};
+use nvim_oximlua::api::{self, opts::*, types::*};
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_highlights() {
     let (name, _) = api::get_color_map().next().unwrap();
     let id = api::get_hl_id_by_name(&name).unwrap();
@@ -22,7 +22,7 @@ fn get_highlights() {
     assert_eq!(by_id, by_name);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_hl() {
     let infos = api::get_hl(0, &Default::default()).unwrap();
     let GetHlInfos::Map(map_iter) = infos else { panic!("expected a map") };
@@ -35,7 +35,7 @@ fn get_hl() {
     assert!(infos.background.is_some());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn hl_underline() {
     let opts = SetHighlightOpts::builder().underline(true).build();
     api::set_hl(0, "MatchParen", &opts).unwrap();
@@ -50,7 +50,7 @@ fn hl_underline() {
     assert_eq!(Some(true), infos.underline);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn hl_foreground_bold() {
     let opts =
         SetHighlightOpts::builder().foreground("#3399cc").bold(true).build();
@@ -67,7 +67,7 @@ fn hl_foreground_bold() {
 }
 
 #[cfg(any(feature = "neovim-0-12", feature = "neovim-nightly"))]
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn hl_cterm() {
     let mut cterm = HighlightCterm::builder().bold(true).build();
     cterm.italic = Some(true);

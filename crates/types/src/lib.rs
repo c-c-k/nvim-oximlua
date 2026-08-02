@@ -7,7 +7,6 @@ mod array;
 pub mod conversion;
 mod dictionary;
 mod error;
-#[cfg_attr(feature = "oximlua", path = "function_oximlua.rs")]
 mod function;
 mod kvec;
 mod macros;

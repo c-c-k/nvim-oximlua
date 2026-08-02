@@ -1,6 +1,6 @@
-use nvim_oxi::api::TabPage;
+use nvim_oximlua::api::TabPage;
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_list_wins() {
     let tab = TabPage::current();
 
@@ -16,17 +16,17 @@ fn get_list_wins() {
     assert_eq!(win, all_wins.into_iter().next().unwrap());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn tabpage_get_number() {
     assert_eq!(Ok(1), TabPage::current().get_number())
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn is_valid() {
     assert!(TabPage::current().is_valid());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn tabpage_set_get_del_var() {
     let mut tab = TabPage::current();
     tab.set_var("foo", 42).unwrap();
@@ -34,18 +34,18 @@ fn tabpage_set_get_del_var() {
     assert_eq!(Ok(()), tab.del_var("foo"));
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn tabpage_set_get_win() {
-    let config = nvim_oxi::api::types::WindowConfig::builder()
-        .relative(nvim_oxi::api::types::WindowRelativeTo::Editor)
+    let config = nvim_oximlua::api::types::WindowConfig::builder()
+        .relative(nvim_oximlua::api::types::WindowRelativeTo::Editor)
         .height(10)
         .width(5)
         .row(1.5)
         .col(1.5)
         .build();
 
-    let window = nvim_oxi::api::open_win(
-        &nvim_oxi::api::Buffer::current(),
+    let window = nvim_oximlua::api::open_win(
+        &nvim_oximlua::api::Buffer::current(),
         true,
         &config,
     )

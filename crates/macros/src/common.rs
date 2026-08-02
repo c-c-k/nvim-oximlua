@@ -13,7 +13,7 @@ pub(crate) trait KeyedAttribute: Parse {
     fn key_span(&self) -> Span;
 }
 
-#[cfg_attr(feature = "oximlua", allow(unused, reason = "unused by default"))]
+#[allow(unused, reason = "unused by default")] // TODO: Adjust to nvim-oximlua
 /// A parses for `key = value` attributes.
 ///
 /// The [`Parse`] implementation of this struct is guaranteed to leave the

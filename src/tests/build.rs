@@ -22,8 +22,8 @@ use cargo_metadata::camino::Utf8PathBuf;
 /// Add the following to your test crate's `build.rs`:
 ///
 /// ```ignore
-/// fn main() -> Result<(), nvim_oxi::tests::BuildError> {
-///     nvim_oxi::tests::build()
+/// fn main() -> Result<(), nvim_oximlua::tests::BuildError> {
+///     nvim_oximlua::tests::build()
 /// }
 /// ```
 ///
@@ -109,7 +109,9 @@ enum BuildErrorKind {
     #[error("couldn't read manifest: {0}")]
     CouldntReadManifest(cargo_metadata::Error),
 
-    #[error("nvim_oxi::tests::build() can only be used inside a build script")]
+    #[error(
+        "nvim_oximlua::tests::build() can only be used inside a build script"
+    )]
     NotInBuildScript,
 
     #[error("couldn't get the root package")]
@@ -211,7 +213,7 @@ impl CargoManifest {
             // caused by invoking `cargo build` in a build script.
             //
             // See https://github.com/rust-lang/cargo/issues/6412 for more.
-            .join("nvim_oxi_tests")
+            .join("nvim_oximlua_tests")
             // Namespace by the package name to allow for multiple test crates
             // in the same workspace.
             .join(&*self.root_package().name)

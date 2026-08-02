@@ -36,7 +36,7 @@ macro_rules! dbg {
 /// # Examples
 ///
 /// ```ignore
-/// use nvim_oxi as nvim;
+/// use nvim_oximlua as nvim;
 ///
 /// nvim::print!("Goodbye {}..", "Earth");
 /// nvim::print!("Hello {planet}!", planet = "Mars");

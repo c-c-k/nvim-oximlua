@@ -99,11 +99,11 @@ macro_rules! initialized_on_main_thread {
 /// # Examples
 ///
 /// ```ignore
-/// use nvim_oxi as nvim;
+/// use nvim_oximlua as nvim;
 /// use mlua::prelude::*;
 ///
 /// fn hello_oximlua() -> LuaResult<()> {
-///     nvim::print!("Hello from nvim-oxi..");
+///     nvim::print!("Hello from nvim-oximlua..");
 ///
 ///     let lua = nvim::olua::get_nvim_lua()?;
 ///     let print = lua.globals().get::<_, LuaFunction>("print")?;
@@ -135,11 +135,11 @@ pub fn get_nvim_lua() -> Result<Lua> {
 /// # Examples
 ///
 /// ```ignore
-/// use nvim_oxi as nvim;
+/// use nvim_oximlua as nvim;
 /// use mlua::prelude::*;
 ///
 /// fn hello_oximlua() -> LuaResult<()> {
-///     nvim::print!("Hello from nvim-oxi..");
+///     nvim::print!("Hello from nvim-oximlua..");
 ///
 ///     let print = lua().globals().get::<_, LuaFunction>("print")?;
 ///     print.call("..and goodbye from mlua!")?;

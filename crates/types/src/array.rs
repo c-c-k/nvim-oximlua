@@ -1,11 +1,6 @@
 use core::ops::{Deref, DerefMut};
 
-#[cfg(not(feature = "oximlua"))]
-use luajit as lua;
-#[cfg(feature = "oximlua")]
 use mlua::ExternalResult;
-#[cfg(feature = "oximlua")]
-use oximlua as olua;
 
 use crate::NonOwning;
 use crate::Object;
@@ -102,7 +97,6 @@ impl Array {
         self.0.swap_remove(index)
     }
 
-    #[cfg(feature = "oximlua")]
     pub(crate) unsafe fn try_from_table_unchecked(
         table: mlua::Table,
     ) -> mlua::Result<Self> {
@@ -194,38 +188,6 @@ impl DoubleEndedIterator for ArrayIterator {
 
 impl core::iter::FusedIterator for ArrayIterator {}
 
-#[cfg(not(feature = "oximlua"))]
-impl lua::Poppable for Array {
-    #[inline]
-    unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
-        use lua::ffi::*;
-
-        if lua_gettop(lstate) == 0 {
-            return Err(lua::Error::PopEmptyStack);
-        } else if lua_type(lstate, -1) != LUA_TTABLE {
-            let ty = lua_type(lstate, -1);
-            return Err(lua::Error::pop_wrong_type::<Self>(LUA_TTABLE, ty));
-        }
-
-        // TODO: check that the table is an array-like table and not a
-        // dictionary-like one?
-
-        let mut kvec = KVec::with_capacity(lua_objlen(lstate, -1));
-
-        lua_pushnil(lstate);
-
-        while lua_next(lstate, -2) != 0 {
-            kvec.push(Object::pop(lstate)?);
-        }
-
-        // Pop the table.
-        lua_pop(lstate, 1);
-
-        Ok(Self(kvec))
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl TryFrom<mlua::Table> for Array {
     type Error = mlua::Error;
 
@@ -244,7 +206,6 @@ impl TryFrom<mlua::Table> for Array {
     }
 }
 
-#[cfg(feature = "oximlua")]
 impl mlua::FromLua for Array {
     #[inline]
     fn from_lua(value: mlua::Value, _lua: &mlua::Lua) -> mlua::Result<Self> {
@@ -260,29 +221,6 @@ impl mlua::FromLua for Array {
     }
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl lua::Pushable for Array {
-    #[inline]
-    unsafe fn push(
-        self,
-        lstate: *mut lua::ffi::State,
-    ) -> Result<core::ffi::c_int, lua::Error> {
-        use lua::ffi::*;
-
-        lua_createtable(lstate, self.len() as _, 0);
-
-        for (idx, obj) in
-            self.into_iter().filter(|obj| !obj.is_nil()).enumerate()
-        {
-            obj.push(lstate)?;
-            lua_rawseti(lstate, -2, (idx + 1) as _);
-        }
-
-        Ok(1)
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl TryFrom<Array> for mlua::Table {
     type Error = mlua::Error;
 
@@ -294,7 +232,6 @@ impl TryFrom<Array> for mlua::Table {
     }
 }
 
-#[cfg(feature = "oximlua")]
 impl mlua::IntoLua for Array {
     #[inline]
     fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {

@@ -1,12 +1,12 @@
-use nvim_oxi::api::{self, opts::*, types::*};
+use nvim_oximlua::api::{self, opts::*, types::*};
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn call_function() {
     let res = api::call_function::<_, usize>("strwidth", ("foo bar",));
     assert_eq!(Ok(7), res);
 }
 
-#[nvim_oxi::test(cmd = "set autoread")] // getting `W13` warnings otherwise
+#[nvim_oximlua::test(cmd = "set autoread")] // getting `W13` warnings otherwise
 fn cmd_basic() {
     let cmd = "checktime";
     let infos = CmdInfos::builder().cmd(cmd).build();
@@ -14,7 +14,7 @@ fn cmd_basic() {
     assert_eq!(Ok(None), api::cmd(&infos, &opts));
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn cmd_no_output() {
     let cmd = "checktime";
     let infos = CmdInfos::builder().cmd(cmd).build();
@@ -22,7 +22,7 @@ fn cmd_no_output() {
     assert_eq!(Ok(None), api::cmd(&infos, &opts));
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn command() {
     let res = api::command(":lua vim.api.nvim_buf_set_var(0, 'foo', 'bar')");
     assert_eq!(Ok(()), res);
@@ -33,7 +33,7 @@ fn command() {
     );
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn eval() {
     let res = api::eval::<u8>("41 + 1");
     assert_eq!(Ok(42), res);
@@ -42,7 +42,7 @@ fn eval() {
     assert_eq!(Ok(69), res); // nice
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn parse_cmd_basic() {
     let res = api::parse_cmd("echo 'foo'", &Default::default());
     assert!(res.is_ok(), "{res:?}");
@@ -82,7 +82,7 @@ fn parse_cmd_basic() {
     assert_eq!(Some(CmdRange::None), infos.range);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn parse_expression_basic() {
     let res = api::parse_expression("lua print('a')", "", true);
     assert!(res.is_ok(), "{res:?}");

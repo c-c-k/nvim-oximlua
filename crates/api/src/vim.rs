@@ -663,7 +663,7 @@ pub fn load_context(ctx: EditorContext) {
 ///
 /// Opens a terminal instance in a buffer. Returns the id of a channel that can
 /// be used to send data to the instance via
-/// [`nvim_oxi::api::chan_send`](chan_send).
+/// [`nvim_oximlua::api::chan_send`](chan_send).
 ///
 /// [1]: https://neovim.io/doc/user/api.html#nvim_open_term()
 pub fn open_term(buffer: &Buffer, opts: &OpenTermOpts) -> Result<u32> {

@@ -38,10 +38,8 @@ jobs:
         with:
             neovim: true
             version: ${{ matrix.neovim }}
-      - name: Run tests for luajit backend
+      - name: Run tests
         run: cargo test --workspace ${{ matrix.features }}
-      - name: Run tests for oximlua backend
-        run: cargo test --workspace --features oximlua ${{ matrix.features }}
 
   clippy:
     name: clippy
@@ -54,7 +52,7 @@ jobs:
           components: clippy
       - run: >
           cargo clippy
-          --features neovim-nightly,libuv,mlua,test,test-terminator,oximlua
+          --features neovim-nightly,libuv,test,test-terminator
           --workspace
           --tests
           -- -D warnings
@@ -68,7 +66,7 @@ jobs:
       - run: >
           RUSTFLAGS="-D warnings"
           RUSTDOCFLAGS="--cfg docsrs"
-          cargo doc --no-deps --features neovim-nightly,oximlua
+          cargo doc --no-deps --features neovim-nightly
 
   format:
     name: format

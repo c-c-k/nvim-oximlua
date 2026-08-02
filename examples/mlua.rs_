@@ -1,4 +1,4 @@
-#![cfg(not(feature = "oximlua"))]
+#![cfg(false)] // TODO: Adjust to nvim-oximlua
 
 use mlua::prelude::LuaFunction;
 use nvim_oxi::{Result, mlua, print};

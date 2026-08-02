@@ -6,9 +6,6 @@ use core::str::{self, Utf8Error};
 use core::{ffi, fmt};
 use std::path::{Path, PathBuf};
 
-#[cfg(not(feature = "oximlua"))]
-use luajit as lua;
-
 use crate::{NvimStr, Object, ObjectKind, StringBuilder, conversion};
 
 /// Binding to the string type used by Neovim.
@@ -256,26 +253,12 @@ impl TryFrom<Object> for String {
     }
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl lua::Pushable for String {
-    #[inline]
-    unsafe fn push(
-        self,
-        lstate: *mut lua::ffi::State,
-    ) -> Result<ffi::c_int, lua::Error> {
-        lua::ffi::lua_pushlstring(lstate, self.as_ptr(), self.len());
-        Ok(1)
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl From<mlua::String> for String {
     fn from(value: mlua::String) -> Self {
         String::from_bytes(&value.as_bytes())
     }
 }
 
-#[cfg(feature = "oximlua")]
 impl mlua::FromLua for String {
     #[inline]
     fn from_lua(value: mlua::Value, _lua: &mlua::Lua) -> mlua::Result<Self> {
@@ -290,39 +273,6 @@ impl mlua::FromLua for String {
     }
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl lua::Poppable for String {
-    #[inline]
-    unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
-        use lua::ffi::*;
-
-        if lua_gettop(lstate) < 0 {
-            return Err(lua::Error::PopEmptyStack);
-        }
-
-        let ty = lua_type(lstate, -1);
-
-        if ty != LUA_TSTRING && ty != LUA_TNUMBER {
-            return Err(lua::Error::pop_wrong_type::<Self>(LUA_TSTRING, ty));
-        }
-
-        let mut len = 0;
-        let ptr = lua_tolstring(lstate, -1, &mut len);
-
-        // The pointer shouldn't be null if the type value at the top of thr
-        // stack is a string or a number, but we'll check anyway.
-        assert!(!ptr.is_null());
-
-        let slice = std::slice::from_raw_parts(ptr as *const u8, len);
-        let s = String::from_bytes(slice);
-
-        lua_pop(lstate, 1);
-
-        Ok(s)
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl mlua::IntoLua for String {
     #[inline]
     fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {

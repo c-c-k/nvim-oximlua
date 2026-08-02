@@ -11,8 +11,5 @@ use error::Result;
 use handle::{Handle, ProperLayout};
 pub use r#loop::init;
 use r#loop::with_loop;
-#[cfg(not(feature = "oximlua"))]
-pub use luajit::IntoResult;
-#[cfg(feature = "oximlua")]
-pub use oximlua::IntoResult;
+pub use olua::IntoResult;
 pub use timer::TimerHandle;

@@ -1,9 +1,4 @@
-#[cfg(not(feature = "oximlua"))]
-use luajit as lua;
-#[cfg(feature = "oximlua")]
 use mlua::ExternalResult;
-#[cfg(feature = "oximlua")]
-use oximlua as olua;
 
 use crate::kvec::{self, KVec};
 use crate::{NonOwning, Object, ObjectKind, conversion};
@@ -158,7 +153,6 @@ impl Dictionary {
         self.0.swap_remove(index)
     }
 
-    #[cfg(feature = "oximlua")]
     pub(crate) unsafe fn try_from_table_unchecked(
         table: mlua::Table,
     ) -> mlua::Result<Self> {
@@ -411,43 +405,6 @@ impl TryFrom<Object> for Dictionary {
     }
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl lua::Poppable for Dictionary {
-    #[inline]
-    unsafe fn pop(lstate: *mut lua::ffi::State) -> Result<Self, lua::Error> {
-        use lua::ffi::*;
-
-        if lua_gettop(lstate) == 0 {
-            return Err(lua::Error::PopEmptyStack);
-        } else if lua_type(lstate, -1) != LUA_TTABLE {
-            let ty = lua_type(lstate, -1);
-            return Err(lua::Error::pop_wrong_type::<Self>(LUA_TTABLE, ty));
-        }
-
-        let mut kvec = KVec::with_capacity(lua_objlen(lstate, -1));
-
-        lua_pushnil(lstate);
-
-        while lua_next(lstate, -2) != 0 {
-            let value = Object::pop(lstate)?;
-
-            // The following `String::pop()` will pop the key, so we push
-            // another copy on the stack for the next iteration.
-            lua_pushvalue(lstate, -1);
-
-            let key = crate::String::pop(lstate)?;
-
-            kvec.push(KeyValuePair { key, value });
-        }
-
-        // Pop the table.
-        lua_pop(lstate, 1);
-
-        Ok(Self(kvec))
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl TryFrom<mlua::Table> for Dictionary {
     type Error = mlua::Error;
 
@@ -466,7 +423,6 @@ impl TryFrom<mlua::Table> for Dictionary {
     }
 }
 
-#[cfg(feature = "oximlua")]
 impl mlua::FromLua for Dictionary {
     #[inline]
     fn from_lua(value: mlua::Value, _lua: &mlua::Lua) -> mlua::Result<Self> {
@@ -482,28 +438,6 @@ impl mlua::FromLua for Dictionary {
     }
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl lua::Pushable for Dictionary {
-    #[inline]
-    unsafe fn push(
-        self,
-        lstate: *mut lua::ffi::State,
-    ) -> Result<core::ffi::c_int, lua::Error> {
-        use lua::ffi::*;
-
-        lua_createtable(lstate, 0, self.len() as _);
-
-        for (key, obj) in self.into_iter().filter(|(_, obj)| !obj.is_nil()) {
-            lua_pushlstring(lstate, key.as_ptr(), key.len());
-            obj.push(lstate)?;
-            lua_rawset(lstate, -3);
-        }
-
-        Ok(1)
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl TryFrom<Dictionary> for mlua::Table {
     type Error = mlua::Error;
 
@@ -515,7 +449,6 @@ impl TryFrom<Dictionary> for mlua::Table {
     }
 }
 
-#[cfg(feature = "oximlua")]
 impl mlua::IntoLua for Dictionary {
     #[inline]
     fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {

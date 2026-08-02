@@ -50,7 +50,7 @@ impl<F, A, R> WrapFn<F, A, R> {
 ///
 /// ```ignore
 /// use mlua::prelude::*;
-/// use nvim_oxi::lua::olua;
+/// use nvim_oximlua::lua::olua;
 ///
 /// fn to_int(str_num: String) -> anyhow::Result<i32> {
 ///    Ok(str_num.parse::<i32>()?)

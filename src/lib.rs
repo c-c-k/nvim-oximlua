@@ -5,17 +5,17 @@
 //!
 //! [Neovim]: https://neovim.io
 
-#![doc(html_root_url = "https://docs.rs/nvim_oxi/latest")]
+#![doc(html_root_url = "https://docs.rs/nvim_oximlua/latest")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![deny(future_incompatible)]
 #![deny(nonstandard_style)]
 #![deny(rustdoc::broken_intra_doc_links)]
 
-#[cfg(not(feature = "oximlua"))]
+#[cfg(false)] // TODO: Adjust to nvim-oximlua
 #[doc(hidden)]
 pub mod entrypoint;
 mod error;
-#[cfg(feature = "oximlua")]
+#[cfg(true)] // TODO: Adjust to nvim-oximlua
 mod init;
 mod toplevel;
 
@@ -46,88 +46,47 @@ pub mod libuv {
     pub use libuv::*;
 }
 
-#[cfg(not(feature = "oximlua"))]
-#[cfg_attr(docsrs, doc(cfg(not(feature = "oximlua"))))]
-pub mod lua {
-    //! Low-level Rust bindings to [LuaJIT], the Lua version used by Neovim.
-    //!
-    //! [LuaJIT]: https://luajit.org/
-    #[doc(inline)]
-    pub use luajit::*;
-}
-
-#[cfg(feature = "mlua")]
-#[cfg_attr(docsrs, doc(cfg(feature = "mlua")))]
 pub mod mlua {
-    //! Integrations with the [mlua] Rust crate providing safe Lua bindings.
+    //! This is an almost 1:1 re-export of the [`mlua`] crate
+    //! ([github:mlua-rs/mlua]),
+    //! please consult it's documentation for details.
     //!
-    //! [mlua]: https://github.com/khvzak/mlua
+    //! The sole exception to the 1:1 re-export is the addition
+    //! of the deprecated [`lua()`] function kept here to ease conversion
+    //! from the original [`nvim-oxi`].
+    //!
+    //! [`mlua`]: ::mlua
+    //! [github:mlua-rs/mlua]: https://github.com/mlua-rs/mlua
+    //! [`lua()`]: ::olua::lua
+    //! [`nvim-oxi`]: https://docs.rs/nvim-oxi
 
     pub use mlua::*;
-
-    #[cfg(feature = "oximlua")]
-    #[deprecated = "including this in what is otherwise a 1:1 re-export of \
+    #[deprecated = "Including this in what is otherwise a 1:1 re-export of \
                     the `mlua` crate can cause confusion for new users. \
                     Please use \
-                    [`nvim_oxi::olua::get_nvim_lua`](oximlua::get_nvim_lua) \
-                    or [`nvim_oxi::olua::lua`](oximlua::lua) instead."]
-    pub fn lua() -> mlua::Lua {
-        oximlua::lua()
-    }
-
-    #[cfg(not(feature = "oximlua"))]
-    /// Returns a
-    /// [`mlua::Lua`](https://docs.rs/mlua/latest/mlua/struct.Lua.html)
-    /// instance which can be used to interact with Lua plugins.
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use mlua::prelude::LuaFunction;
-    /// use nvim_oxi as nvim;
-    ///
-    /// #[nvim::plugin]
-    /// fn mlua() -> nvim::Result<()> {
-    ///     nvim::print!("Hello from nvim-oxi..");
-    ///
-    ///     let lua = nvim::mlua::lua();
-    ///     let print = lua.globals().get::<_, LuaFunction>("print")?;
-    ///     print.call("..and goodbye from mlua!")?;
-    ///
-    ///     Ok(())
-    /// }
-    /// ```
-    pub fn lua() -> mlua::Lua {
-        unsafe {
-            luajit::with_state(|lua_state| {
-                mlua::Lua::get_or_init_from_ptr(lua_state as *mut _).clone()
-            })
-        }
-    }
+                    [`nvim_oximlua::olua::get_nvim_lua`](::olua::get_nvim_lua) \
+                    or [`nvim_oximlua::olua::lua`](::olua::lua) instead."]
+    pub use olua::lua;
 }
 
-#[cfg(feature = "oximlua")]
-#[cfg_attr(docsrs, doc(cfg(feature = "oximlua")))]
 pub mod olua {
-    //! Integrations to work alongside the [mlua] Rust crate.
+    //! Integrations to work alongside the [`mlua`] crate.
     //!
-    //! [mlua]: https://github.com/khvzak/mlua
+    //! [`mlua`]: ::mlua
 
-    pub use oximlua::*;
+    #[doc(inline)]
+    pub use olua::*;
 }
 
 pub use error::{Error, Result};
-#[cfg(feature = "oximlua")]
+#[cfg(true)] // TODO: Adjust to nvim-oximlua
 pub use init::init;
-#[cfg(not(feature = "oximlua"))]
-pub use luajit::{IntoResult, dbg, print};
-#[cfg(not(feature = "oximlua"))]
+#[cfg(false)] // TODO: Adjust to nvim-oximlua
 pub use macros::plugin;
 #[cfg(feature = "test")]
 #[cfg_attr(docsrs, doc(cfg(feature = "test")))]
 pub use macros::test;
-#[cfg(feature = "oximlua")]
-pub use oximlua::{IntoResult, dbg, print};
+pub use olua::{IntoResult, dbg, print};
 pub use types::*;
 #[cfg(feature = "test")]
 pub mod tests;

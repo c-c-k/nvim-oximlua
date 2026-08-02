@@ -1,16 +1,9 @@
 use core::ops::RangeBounds;
-#[cfg(not(feature = "oximlua"))]
-use std::error::Error as StdError;
 use std::fmt;
 use std::path::Path;
 use std::result::Result as StdResult;
 
-#[cfg(not(feature = "oximlua"))]
-use luajit::{self as lua, Poppable, Pushable};
-#[cfg(feature = "oximlua")]
 use mlua::{ExternalError, FromLuaMulti, IntoLuaMulti};
-#[cfg(feature = "oximlua")]
-use oximlua as olua;
 use serde::{Deserialize, Serialize};
 use types::{
     self as nvim,
@@ -77,33 +70,12 @@ impl FromObject for Buffer {
     }
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl Poppable for Buffer {
-    unsafe fn pop(
-        lstate: *mut lua::ffi::State,
-    ) -> std::result::Result<Self, lua::Error> {
-        unsafe { BufHandle::pop(lstate) }.map(Into::into)
-    }
-}
-
-#[cfg(not(feature = "oximlua"))]
-impl Pushable for Buffer {
-    unsafe fn push(
-        self,
-        lstate: *mut lua::ffi::State,
-    ) -> std::result::Result<std::ffi::c_int, lua::Error> {
-        unsafe { self.0.push(lstate) }
-    }
-}
-
-#[cfg(any(feature = "mlua", feature = "oximlua"))]
 impl mlua::IntoLua for Buffer {
     fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
         self.handle().into_lua(lua)
     }
 }
 
-#[cfg(any(feature = "mlua", feature = "oximlua"))]
 impl mlua::FromLua for Buffer {
     fn from_lua(value: mlua::Value, lua: &mlua::Lua) -> mlua::Result<Self> {
         BufHandle::from_lua(value, lua).map(Into::into)
@@ -154,54 +126,6 @@ impl Buffer {
         )
     }
 
-    #[cfg(not(feature = "oximlua"))]
-    /// Binding to [`nvim_buf_call()`][1].
-    ///
-    /// Calls a function with this buffer as the temporary current buffer.
-    ///
-    /// [1]: https://neovim.io/doc/user/api.html#nvim_buf_call()
-    pub fn call<F, Res, Ret>(&self, fun: F) -> Result<Ret>
-    where
-        F: FnOnce(()) -> Res + 'static,
-        Res: IntoResult<Ret>,
-        Res::Error: StdError + 'static,
-        Ret: Pushable + FromObject,
-    {
-        let fun = Function::from_fn_once(fun);
-        let mut err = nvim::Error::new();
-
-        let ref_or_nil =
-            unsafe { nvim_buf_call(self.0, fun.lua_ref(), &mut err) };
-
-        let lua_ref = match ref_or_nil.kind() {
-            types::ObjectKind::LuaRef => unsafe {
-                ref_or_nil.as_luaref_unchecked()
-            },
-            types::ObjectKind::Nil => {
-                return Ret::from_object(Object::nil()).map_err(Into::into);
-            },
-            other => panic!("Unexpected object kind: {other:?}"),
-        };
-
-        let obj = unsafe {
-            lua::with_state(|lstate| {
-                lua::ffi::lua_rawgeti(
-                    lstate,
-                    lua::ffi::LUA_REGISTRYINDEX,
-                    lua_ref,
-                );
-                Object::pop(lstate)
-            })
-        }
-        .map_err(Error::custom)?;
-
-        choose!(err, {
-            fun.remove_from_lua_registry();
-            Ok(Ret::from_object(obj)?)
-        })
-    }
-
-    #[cfg(feature = "oximlua")]
     /// Binding to [`nvim_buf_call()`][1].
     ///
     /// Calls a function with this buffer as the temporary current buffer.
@@ -227,20 +151,20 @@ impl Buffer {
             },
             types::ObjectKind::Nil => {
                 return Ok(Ret::from_lua_multi(mlua::MultiValue::new(), &lua)
-                    .map_err(oximlua::Error::from)?);
+                    .map_err(olua::Error::from)?);
             },
             other => panic!("Unexpected object kind: {other:?}"),
         };
 
-        let value = oximlua::get_registry_value(lua_ref)?;
+        let value = olua::get_registry_value(lua_ref)?;
 
         choose!(err, {
             unsafe { fun.remove_from_lua_registry() };
             Ok(Ret::from_lua_multi(
-                value.into_lua_multi(&lua).map_err(oximlua::Error::from)?,
+                value.into_lua_multi(&lua).map_err(olua::Error::from)?,
                 &lua,
             )
-            .map_err(oximlua::Error::from)?)
+            .map_err(olua::Error::from)?)
         })
     }
 

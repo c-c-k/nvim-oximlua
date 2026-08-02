@@ -1,13 +1,13 @@
 use all_asserts::*;
-use nvim_oxi::api::{self, Buffer, Window, opts::*, types::*};
+use nvim_oximlua::api::{self, Buffer, Window, opts::*, types::*};
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn chan_send_fail() {
     let res = api::chan_send(42, "hello there");
     assert!(res.is_err());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn create_del_user_command() {
     let res = api::create_user_command("Foo", ":", &Default::default());
     assert_eq!(Ok(()), res);
@@ -28,7 +28,7 @@ fn create_del_user_command() {
     assert_eq!(Ok(()), api::del_user_command("Bar"));
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn echo() {
     api::echo(
         [("Hello ", None), ("World", Some("WarningMsg"))],
@@ -38,7 +38,7 @@ fn echo() {
     .unwrap();
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 #[cfg(feature = "neovim-0-12")] // On 0.12 and Nightly.
 fn echo_update_message_id() {
     let message_id = api::echo(
@@ -58,14 +58,14 @@ fn echo_update_message_id() {
     assert_eq!(message_id, new_message_id);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn eval_statusline() {
     let opts = EvalStatuslineOpts::builder().highlights(true).build();
     let res = api::eval_statusline("foo", &opts);
     assert_eq!(Ok("foo".into()), res.map(|infos| infos.str));
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 #[ignore = "fails on Linux and Windows, not sure why"]
 fn eval_statusline_empty() {
     let opts = EvalStatuslineOpts::default();
@@ -75,7 +75,7 @@ fn eval_statusline_empty() {
     assert!(infos.highlights.is_empty());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn feedkeys() {
     let keys = "iHllo<Esc>bi<Right>e";
     let keys = api::replace_termcodes(keys, true, false, true);
@@ -89,13 +89,13 @@ fn feedkeys() {
     assert_eq!(lines, ["Hello"]);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_chan_info() {
     let res = api::get_chan_info(0);
     assert!(res.is_err());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_colors() {
     let colors = api::get_color_map().collect::<Vec<_>>();
     assert_lt!(0, colors.len());
@@ -104,26 +104,26 @@ fn get_colors() {
     assert_eq!(color, api::get_color_by_name(&name).unwrap());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_context() {
     let res = api::get_context(&Default::default());
     assert!(res.is_ok());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_mode() {
     let GotMode { blocking, mode, .. } = api::get_mode();
     assert_eq!(mode, "n");
     assert!(!blocking);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_options() {
     let res = api::get_all_options_info();
     assert_lt!(0, res.unwrap().collect::<Vec<_>>().len());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_option_info2() {
     let opts =
         OptionOpts::builder().scope(api::opts::OptionScope::Global).build();
@@ -131,12 +131,12 @@ fn get_option_info2() {
     assert!(api::get_option_info2("number", &opts).is_ok());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn get_runtime_file() {
     assert!(api::get_runtime_file("*", true).unwrap().next().is_some());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn list_bufs() {
     let _ = api::create_buf(true, false);
     let _ = api::create_buf(true, false);
@@ -147,12 +147,12 @@ fn list_bufs() {
     assert_eq!(vec![Buffer::from(1), Buffer::from(2), Buffer::from(3)], bufs);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn list_runtime_paths() {
     assert!(api::list_runtime_paths().unwrap().next().is_some());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn list_wins() {
     api::command("vsp").unwrap();
     api::command("vsp").unwrap();
@@ -166,7 +166,7 @@ fn list_wins() {
     );
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn set_get_del_current_line() {
     let res = api::set_current_line("foo");
     assert_eq!(Ok(()), res);
@@ -178,7 +178,7 @@ fn set_get_del_current_line() {
     assert_eq!(Ok(()), res);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn set_get_del_keymap() {
     let opts = SetKeymapOpts::builder()
         .callback(|_| ())
@@ -197,7 +197,7 @@ fn set_get_del_keymap() {
     assert_eq!(Ok(()), res);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn set_get_del_mark() {
     let mut buf = api::create_buf(true, false).unwrap();
 
@@ -215,14 +215,14 @@ fn set_get_del_mark() {
     assert_eq!(Ok(()), res);
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn set_get_del_var() {
     api::set_var("foo", 42).unwrap();
     assert_eq!(Ok(42), api::get_var("foo"));
     assert_eq!(Ok(()), api::del_var("foo"));
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn set_get_option_value() {
     let opts =
         OptionOpts::builder().scope(api::opts::OptionScope::Global).build();
@@ -230,12 +230,12 @@ fn set_get_option_value() {
     assert!(api::get_option_value::<bool>("modified", &opts).unwrap());
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn strwidth() {
     assert_eq!(Ok(2), api::strwidth("｜"));
 }
 
-#[nvim_oxi::test]
+#[nvim_oximlua::test]
 fn user_command_with_count() {
     let opts = CreateCommandOpts::builder().count(32).build();
     api::create_user_command("Foo", "echo 'foo'", &opts).unwrap();

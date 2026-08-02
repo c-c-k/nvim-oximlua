@@ -1,13 +1,6 @@
 use serde::Deserialize;
 use serde::Serialize;
-#[cfg(feature = "oximlua")]
 use types::serde::Serializer;
-#[cfg(not(feature = "oximlua"))]
-use types::{
-    Object,
-    conversion::{self, FromObject},
-    serde::Deserializer,
-};
 
 use crate::serde_utils as utils;
 
@@ -54,33 +47,12 @@ pub struct CommandArgs {
     pub smods: super::CommandModifiers,
 }
 
-#[cfg(not(feature = "oximlua"))]
-impl FromObject for CommandArgs {
-    fn from_object(obj: Object) -> Result<Self, conversion::Error> {
-        Self::deserialize(Deserializer::new(obj)).map_err(Into::into)
-    }
-}
-
-#[cfg(not(feature = "oximlua"))]
-impl luajit::Poppable for CommandArgs {
-    unsafe fn pop(
-        lstate: *mut luajit::ffi::State,
-    ) -> Result<Self, luajit::Error> {
-        let obj = Object::pop(lstate)?;
-
-        Self::from_object(obj)
-            .map_err(luajit::Error::pop_error_from_err::<Self, _>)
-    }
-}
-
-#[cfg(feature = "oximlua")]
 impl mlua::FromLua for CommandArgs {
     fn from_lua(value: mlua::Value, _lua: &mlua::Lua) -> mlua::Result<Self> {
         Self::deserialize(mlua::serde::Deserializer::new(value))
     }
 }
 
-#[cfg(feature = "oximlua")]
 impl mlua::IntoLua for CommandArgs {
     fn into_lua(self, lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
         let obj = self

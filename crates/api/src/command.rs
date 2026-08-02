@@ -81,7 +81,7 @@ pub fn del_user_command(name: &str) -> Result<()> {
 ///
 /// The underlying C API function creates a Lua registry slot for each
 /// command and completion callback, which it expects the caller to clean up.
-/// Currently `nvim-oxi` does not perform this cleanup, consequentially
+/// Currently `nvim-oximlua` does not perform this cleanup, consequentially
 /// calling this function creates a serious leak of Lua registry slots which
 /// in turn also prevents the callbacks from being garbage collected if their
 /// commands are deleted.
