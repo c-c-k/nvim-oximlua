@@ -18,7 +18,6 @@ keywords = ["bindings", "neovim", "nvim", "mlua"]
 # 3rd-party dependencies.
 cargo_metadata = "0.23"
 libc = "0.2"
-mlua = { version = "0.11.6", features = ["luajit", "serde"] }
 proc-macro2 = "1"
 quote = "1"
 serde = "1"
@@ -26,6 +25,11 @@ serde_repr = "0.1"
 syn = "2"
 thiserror = "2"
 tokio = "1"
+
+# NOTE: The version and features of `mlua` must be in sync
+#       between `nvim-oximlua` and `mlua-extras`!
+mlua = { version = "0.11.6", features = ["luajit", "serde"] }
+mlua-extras = { version = "11.6.2", features = ["luajit"] }
 
 # Internal dependencies.
 api = { path = "./crates/api", package = "nvim-oximlua-api" }
@@ -76,12 +80,13 @@ libuv = ["dep:libuv"]
 test = ["macros/test", "dep:cargo_metadata"]
 test-terminator = ["test", "libuv", "macros/test-terminator"]
 
-# mlua re-exports
-async = ["mlua/async"]
-error-send = ["mlua/error-send"]
-macros = ["mlua/macros"]
-anyhow = ["mlua/anyhow"]
-userdata-wrappers = ["mlua/userdata-wrappers"]
+# mlua and mlua-extras re-exports
+mlua-extras = ["dep:mlua-extras"]
+async = ["mlua/async", "mlua-extras?/async"]
+error-send = ["mlua/error-send", "mlua-extras?/error-send"]
+macros = ["mlua/macros", "mlua-extras?/macros"]
+anyhow = ["mlua/anyhow", "mlua-extras?/anyhow"]
+userdata-wrappers = ["mlua/userdata-wrappers", "mlua-extras?/userdata-wrappers"]
 
 [dependencies]
 api = { workspace = true }
@@ -93,6 +98,7 @@ vimfn = { workspace = true }
 
 cargo_metadata = { workspace = true, optional = true }
 mlua = { workspace = true }
+mlua-extras = { workspace = true, optional = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]

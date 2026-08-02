@@ -69,6 +69,19 @@ pub mod mlua {
     pub use olua::lua;
 }
 
+#[cfg(feature = "mlua-extras")]
+#[cfg_attr(docsrs, doc(cfg(feature = "mlua-extras")))]
+pub mod mlua_extras {
+    //! This is a 1:1 re-export of the [`mlua-extras`] crate
+    //! ([github:tired-fox/mlua-extras]),
+    //! please consult it's documentation for details.
+    //!
+    //! [`mlua-extras`]: ::mlua_extras
+    //! [github:tired-fox/mlua-extras]: https://github.com/tired-fox/mlua-extras
+
+    pub use mlua_extras::*;
+}
+
 pub mod olua {
     //! Integrations to work alongside the [`mlua`] crate.
     //!
