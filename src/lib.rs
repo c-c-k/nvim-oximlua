@@ -11,12 +11,9 @@
 #![deny(nonstandard_style)]
 #![deny(rustdoc::broken_intra_doc_links)]
 
-#[cfg(false)] // TODO: Adjust to nvim-oximlua
 #[doc(hidden)]
 pub mod entrypoint;
 mod error;
-#[cfg(true)] // TODO: Adjust to nvim-oximlua
-mod init;
 mod toplevel;
 
 pub mod api {
@@ -91,11 +88,11 @@ pub mod olua {
     pub use olua::*;
 }
 
-pub use error::{Error, Result};
 #[cfg(true)] // TODO: Adjust to nvim-oximlua
-pub use init::init;
+pub use entrypoint::init;
 #[cfg(false)] // TODO: Adjust to nvim-oximlua
-pub use macros::plugin;
+pub use entrypoint::plugin;
+pub use error::{Error, Result};
 #[cfg(feature = "test")]
 #[cfg_attr(docsrs, doc(cfg(feature = "test")))]
 pub use macros::test;
