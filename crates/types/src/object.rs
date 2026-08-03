@@ -1,3 +1,5 @@
+#![allow(unsafe_op_in_unsafe_fn)]
+
 use std::borrow::Cow;
 use std::mem::ManuallyDrop;
 
@@ -42,6 +44,9 @@ pub enum ObjectKind {
     Buffer,
     Window,
     TabPage,
+
+    // Internal use non-C-API variants
+    LuaRefFreeOnDrop, // A Lua Registry Ref that will be freed on drop
 }
 
 impl ObjectKind {
@@ -58,6 +63,7 @@ impl ObjectKind {
             Self::Buffer => "buffer",
             Self::Window => "window",
             Self::TabPage => "tabpage",
+            Self::LuaRefFreeOnDrop => "luaref_free_on_drop",
         }
     }
 }
@@ -105,6 +111,11 @@ impl core::fmt::Debug for Object {
                 let luaref = unsafe { self.data.luaref };
                 return write!(f, "Object(LuaRef({luaref}))");
             },
+
+            ObjectKind::LuaRefFreeOnDrop => {
+                let luaref = unsafe { self.data.luaref };
+                return write!(f, "Object(LuaRefFreeOnDrop({luaref}))");
+            },
         };
 
         field.fmt(f)
@@ -131,6 +142,22 @@ impl Object {
     #[inline(always)]
     pub fn from_luaref(luaref: LuaRef) -> Self {
         Self { ty: ObjectKind::LuaRef, data: ObjectData { luaref } }
+    }
+
+    #[inline]
+    pub fn set_luaref_free_on_drop(&mut self) {
+        match self.ty {
+            ObjectKind::LuaRef => self.ty = ObjectKind::LuaRefFreeOnDrop,
+            _ => (),
+        }
+    }
+
+    #[inline]
+    pub fn set_luaref_no_free_on_drop(&mut self) {
+        match self.ty {
+            ObjectKind::LuaRefFreeOnDrop => self.ty = ObjectKind::LuaRef,
+            _ => (),
+        }
     }
 
     #[inline]
@@ -284,6 +311,9 @@ impl Object {
     ///
     /// # Safety
     ///
+    /// Most internal methods will free the Lua registry slot for the `LuaRef`
+    /// in the object when they consume it.
+    ///
     /// This `Object`'s [`ObjectKind`] must be a
     /// [`LuaRef`][ObjectKind::LuaRef]. Calling this method on an `Object` with
     /// any other kind may result in undefined behavior.
@@ -301,6 +331,9 @@ impl Object {
     /// value without performing any runtime checks.
     ///
     /// # Safety
+    ///
+    /// Most internal methods will free the Lua registry slot for the `LuaRef`
+    /// in the object when they consume it.
     ///
     /// This `Object`'s [`ObjectKind`] must be a
     /// [`LuaRef`][ObjectKind::LuaRef]. Calling this method on an `Object` with
@@ -491,7 +524,7 @@ impl Clone for Object {
             ObjectKind::Dictionary => {
                 clone_drop!(self, dictionary, Dictionary)
             },
-            ObjectKind::LuaRef => {
+            ObjectKind::LuaRef | ObjectKind::LuaRefFreeOnDrop => {
                 //unsafe {
                 // Function::add_cache_ref_count(self.data.luaref);
                 clone_copy!(self, luaref)
@@ -515,9 +548,9 @@ impl Drop for Object {
                 ManuallyDrop::drop(&mut self.data.dictionary)
             },
 
-            // ObjectKind::LuaRef => unsafe {
-            //     Function::remove_cache_ref_count(self.data.luaref)
-            // },
+            ObjectKind::LuaRefFreeOnDrop => unsafe {
+                olua::free_registry_lua_ref(self.data.luaref).unwrap();
+            },
             _ => {},
         }
     }
@@ -544,7 +577,7 @@ impl PartialEq<Self> for Object {
                 String => lhs.string == rhs.string,
                 Array => lhs.array == rhs.array,
                 Dictionary => lhs.dictionary == rhs.dictionary,
-                LuaRef => lhs.luaref == rhs.luaref,
+                LuaRef | LuaRefFreeOnDrop => lhs.luaref == rhs.luaref,
             }
         }
     }
@@ -728,7 +761,7 @@ impl mlua::IntoLua for Object {
                 ObjectKind::Dictionary => {
                     self.into_dictionary_unchecked().into_lua(lua)
                 },
-                ObjectKind::LuaRef => {
+                ObjectKind::LuaRef | ObjectKind::LuaRefFreeOnDrop => {
                     Function::<(), ()>::from_ref(self.as_luaref_unchecked())
                         .into_lua(lua)
                 },

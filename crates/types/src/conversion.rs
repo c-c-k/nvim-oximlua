@@ -127,9 +127,10 @@ impl FromObject for Array {
 }
 
 impl<A, R> FromObject for Function<A, R> {
-    fn from_object(obj: Object) -> Result<Self, Error> {
+    fn from_object(mut obj: Object) -> Result<Self, Error> {
         match obj.kind() {
-            ObjectKind::LuaRef => {
+            ObjectKind::LuaRef | ObjectKind::LuaRefFreeOnDrop => {
+                obj.set_luaref_free_on_drop();
                 Ok(Self::from_ref(unsafe { obj.as_luaref_unchecked() }))
             },
 
