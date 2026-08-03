@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use mlua::ExternalError;
 use thiserror::Error as ThisError;
 
 #[derive(Clone, Debug, ThisError)]
@@ -58,3 +59,9 @@ impl PartialEq for Error {
 }
 
 impl Eq for Error {}
+
+impl From<Error> for mlua::Error {
+    fn from(err: Error) -> Self {
+        err.into_lua_err()
+    }
+}
