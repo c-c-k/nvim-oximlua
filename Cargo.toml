@@ -1,7 +1,5 @@
 [workspace]
-# TODO: adjust examples to nvim-oximlua
-# members = ["crates/*", "examples/*", "tests-integration"]
-members = ["crates/*", "tests-integration"]
+members = ["crates/*", "examples/*", "tests-integration"]
 resolver = "2"
 
 [workspace.package]
@@ -105,30 +103,28 @@ thiserror = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 tokio = { workspace = true, features = ["full"] }
 
-# TODO: Adjust to nvim-oximlua
-#
-# [[example]]
-# name = "api"
-# path = "./examples/api.rs"
-# crate-type = ["cdylib"]
-#
-# [[example]]
-# name = "calc"
-# path = "./examples/calc.rs"
-# crate-type = ["cdylib"]
-#
-# [[example]]
-# name = "libuv"
-# path = "./examples/libuv.rs"
-# crate-type = ["cdylib"]
-# required-features = ["libuv"]
-#
-# [[example]]
-# name = "mechanic"
-# path = "./examples/mechanic.rs"
-# crate-type = ["cdylib"]
-#
-# [[example]]
-# name = "mlua"
-# path = "./examples/mlua.rs"
-# crate-type = ["cdylib"]
+[[example]]
+name = "nvim_api"
+path = "./examples/nvim_api.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "exports"
+path = "./examples/exports.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "exports_compatibility"
+path = "./examples/exports_compatibility.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "libuv"
+path = "./examples/libuv.rs"
+crate-type = ["cdylib"]
+required-features = ["libuv"]
+
+[[example]]
+name = "serde"
+path = "./examples/serde.rs"
+crate-type = ["cdylib"]

@@ -1,4 +1,31 @@
+//! For idiomatic `serde` usage with `mlua` please see the
+//! [mlua serde example](https://github.com/mlua-rs/mlua/blob/main/examples/serde.rs).
+//!
+//! This original `nvim-oxi` example is currently not working due to lack of
+//! a `nvim-oximlua` compatibility layer for `nvim-oxi::lua::{Pushable, Poppable}`
+//! but is kept for the time being in case such a compatibility layer is added
+//! in the future.
+
 #![cfg(false)] // TODO: Adjust to nvim-oximlua
+
+//! ## Original `nvim-oxi` description
+//!
+//! Shows how to deserialize Lua tables into Rust objects using
+//! [`serde`](https://serde.rs).
+//!
+//! ```lua
+//! local mechanic = require("mechanic")
+//!
+//! local fixed = mechanic.fix({
+//!   manufacturer = "Tesla",
+//!   miles = 69420,
+//!   works = false,
+//!   problem = "kills_pedestrians",
+//! })
+//!
+//! assert(fixed.works)
+//! assert(fixed.problem == nil)
+//! ```
 
 use nvim_oxi::conversion::{Error as ConversionError, FromObject, ToObject};
 use nvim_oxi::serde::{Deserializer, Serializer};
