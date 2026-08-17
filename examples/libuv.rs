@@ -1,15 +1,21 @@
-#![cfg(false)] // TODO: Adjust to nvim-oximlua
+//! This example shows how to use the `nvim_oxi::libuv` module to trigger
+//! a callback registered on the Neovim thread from other threads.
 
 use std::thread;
 use std::time::Duration;
 
-use nvim_oxi::libuv::{AsyncHandle, TimerHandle};
-use nvim_oxi::{Result, print, schedule};
+use mlua::ExternalResult;
+use nvim::libuv::{AsyncHandle, TimerHandle};
+use nvim::mlua;
+use nvim::{print, schedule};
+use nvim_oximlua as nvim;
 use tokio::sync::mpsc::{self, UnboundedSender};
 use tokio::time;
 
-#[nvim_oxi::plugin]
-fn libuv() -> Result<()> {
+#[mlua::lua_module]
+fn libuv(lua: &mlua::Lua) -> mlua::Result<mlua::Value> {
+    nvim::init(lua)?;
+
     // --
     let mut n = 0;
 
@@ -42,11 +48,12 @@ fn libuv() -> Result<()> {
     let handle = AsyncHandle::new(move || {
         let i = receiver.blocking_recv().unwrap();
         schedule(move |_| print!("Received number {i} from backround thread"));
-    })?;
+    })
+    .into_lua_err()?;
 
     let _ = thread::spawn(move || send_numbers(handle, sender));
 
-    Ok(())
+    Ok(mlua::Nil)
 }
 
 #[tokio::main]
