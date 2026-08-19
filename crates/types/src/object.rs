@@ -762,8 +762,10 @@ impl mlua::IntoLua for Object {
                     self.into_dictionary_unchecked().into_lua(lua)
                 },
                 ObjectKind::LuaRef | ObjectKind::LuaRefFreeOnDrop => {
-                    Function::<(), ()>::from_ref(self.as_luaref_unchecked())
-                        .into_lua(lua)
+                    Function::<(), ()>::try_from_ref(
+                        self.as_luaref_unchecked(),
+                    )?
+                    .into_lua(lua)
                 },
             }
         }

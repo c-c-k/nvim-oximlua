@@ -130,8 +130,7 @@ impl<A, R> FromObject for Function<A, R> {
     fn from_object(mut obj: Object) -> Result<Self, Error> {
         match obj.kind() {
             ObjectKind::LuaRef | ObjectKind::LuaRefFreeOnDrop => {
-                obj.set_luaref_free_on_drop();
-                Ok(Self::from_ref(unsafe { obj.as_luaref_unchecked() }))
+                Self::try_from_ref(unsafe { obj.as_luaref_unchecked() })
             },
 
             other => Err(Error::FromWrongType {
